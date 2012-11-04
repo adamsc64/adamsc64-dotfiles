@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# My .bash_login file #
+#######################
+# Add my .bash_login file. This sets a colorized bash prompt, some reasonable
+# PATH defaults, and adds Amazon Web Services scripts to the path.
+
+# Fancy colorized terminal settings #
+#####################################
+# What I'm doing here is defining the environment variable that the bash shell
+# uses to render its prompt. The terminal uses the first part to override its
+# default window title.
+#
+# For informating about colors:
+# https://wiki.archlinux.org/index.php/Color_Bash_Prompt
+#
+# Sets the terminal title to username, hostname, and $CWD.
+    export PS1="\[\e]2;\u@\H \w\a\]"
+# Current time in dark gray:
+    export PS1+="\[\e[30;1m\]\t"
+# Current hostname in green:
+    export PS1+=" \[\e[0;35m\]\h"
+# @ symbol in dark gray
+    export PS1+="\[\e[30;1m\]@"
+# The current working directory in green
+    export PS1+="\[\e[0;32m\]\w"
+# The classic $
+    export PS1+=" \[\e[30;1m\]\$ "
+# Reset back to normal color.
+    export PS1+="\[\e[0m\]"
+#
+# Also, default ls to colorized display.
+# See http://geoff.greer.fm/lscolors/
+    alias ls="ls -G"
+    export LSCOLORS=DxGxcxdxCxegedabagacad
+
+# Set $PATH variable. #
+#######################
+# Note that these definitions are in reverse order.
+# MacPorts third (e.g., MacPorts python is at /opt/local/bin).
+    export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+# Shared local scripts second.
+    export PATH=/usr/local/bin:/usr/local/sbin:$PATH
+# Always have my own executables come first.
+    export PATH=$HOME/bin:$HOME/scripts:$PATH
+
+# Amazon Web Services #
+#######################
+# The command line tools depend on an environment variable (EC2_HOME) to locate
+# supporting libraries. You'll need to set this environment variable before you
+# can use the tools. This should be set to the path of the directory into which
+# the command line tools were unzipped. This directory is named
+# ec2-api-tools-A.B-rrrr (A, B and r are version/release numbers), and contains
+# sub-directories named bin and lib.
+    export EC2_HOME=$HOME/.ec2/ec2-api-tools-1.4.3.0
+    export PATH=$PATH:$EC2_HOME/bin
