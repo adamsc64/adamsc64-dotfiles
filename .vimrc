@@ -4,6 +4,17 @@
 " automatically reload vimrc when it's saved
 "" autocmd BufWritePost .vimrc source %
 
+" Disable legacy vi compatibility
+set nocompatible
+
+" Unbind the cursor keys in insert, normal and visual modes.
+" Forces you to learn to use 'hjkl' to navigate.
+""for prefix in ['i', 'n', 'v']
+"" for key in ['<Up>', '<Down>', '<Left>', '<Right>']
+"" exe prefix . "noremap " . key . " <Nop>"
+"" endfor
+""endfor
+
 " Always yank to system-wide clipboard.
 set clipboard=unnamed
 
@@ -34,7 +45,7 @@ vnoremap > >gv
 let mapleader = ","
 
 " Map the vim 'sort' function.
-vnoremap <Leader>s :sort<CR>
+"" vnoremap <Leader>s :sort<CR>
 
 " Enable syntax highlighting in general
 filetype plugin indent on
@@ -53,18 +64,6 @@ set smartcase   " Do match case if uppercase letters are in string
 """""""""""""""""""
 " PYTHON SETTINGS "
 """""""""""""""""""
-
-" Set color scheme.
-"
-" Color schemes should be *.vim files inside $HOME/.vim/colors/
-" Here are two nice ones:
-" $ curl http://www.vim.org/scripts/download_script.php?src_id=17973 > ~/.vim/colors/pychimp.vim
-" $ curl http://www.vim.org/scripts/download_script.php?src_id=13400 > ~/.vim/colors/wombat256mod.vim
-set t_Co=256
-" If placed before wombat256mod, this defaults to black.
-"" autocmd ColorScheme * highlight Normal ctermbg=black
-"" color wombat256mod
-color pychimp
 
 " Python tabstops
 set expandtab     " Turn all tabs into spaces.
@@ -86,10 +85,30 @@ map <Leader>b Oimport ipdb; ipdb.set_trace()<C-c>
 " Consider .wsgi files as python files.
 autocmd BufNewFile,BufRead *.wsgi set filetype=python
 
+" Set color scheme.
+"
+" Allow 256 colors (woo!)
+set t_Co=256
+" For the 256 color definitions in xterm, see
+" http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
+"
+" Color schemes should be *.vim files inside $HOME/.vim/colors/
+" Here are two nice ones:
+" $ curl http://www.vim.org/scripts/download_script.php?src_id=17973 > ~/.vim/colors/pychimp.vim
+" $ curl http://www.vim.org/scripts/download_script.php?src_id=13400 > ~/.vim/colors/wombat256mod.vim
+" If placed before wombat256mod, this defaults to black.
+"autocmd ColorScheme * highlight Normal ctermbg=black
+"color wombat256mod
+color pychimp
 
-" Flag whitespace as irregular if: 1. trailing, 2. ALL tabs.
+" Manage whitespace warnings sanely but strictly.
+"
+" First, disable Dmitry Vasiliev's default behavior in syntax/python.vim.
+let python_highlight_space_errors=0
+" Then define replacement rules.
+" Flag whitespace as irregular in dark red if: 1. trailing, 2. is a tab.
 autocmd ColorScheme * highlight ExtraWhitespace
-highlight ExtraWhitespace ctermbg=darkred
+highlight ExtraWhitespace ctermbg=52
 autocmd InsertEnter * match ExtraWhitespace /\t\|\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\t\|\s\+$/
 
@@ -101,13 +120,12 @@ set number           " Turn on line numbers
 set textwidth=79     " Autowrap at character 79.
 set nowrap           " Turn off annoying line wrapping appearing on next line
 set formatoptions-=t " Don't wrap text being inserted
-"set ruler            " Replaced by vim-powerline plugin.
 
 " Subtle, dark gray color column on the right to remind us to stay in 80
 " characters.
-" See http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
 set colorcolumn=80
-highlight ColorColumn ctermbg=233
+highlight ColorColumn ctermbg=235
+
 
 " Turn off the bell
 set visualbell t_vb=
@@ -127,12 +145,11 @@ set undolevels=700
 """""""""""""""""""""""""""
 " PATHOGEN PLUGIN MANAGER "
 """""""""""""""""""""""""""
-" Set up the Pathogen plugin manager:
-" $ mkdir -p ~/.vim/autoload ~/.vim/bundle
-" $ curl -o ~/.vim/autoload/pathogen.vim https://raw.github.com/tpope/vim-pathogen/HEAD/autoload/pathogen.vim
-" Then just 'git clone' plugins right into ~/.vim/bundle/ and they will be detected.
+" To set up the Pathogen plugin manager:
+" 1. $ mkdir -p ~/.vim/autoload ~/.vim/bundle
+" 2. $ curl -o ~/.vim/autoload/pathogen.vim https://raw.github.com/tpope/vim-pathogen/HEAD/autoload/pathogen.vim
+" 3. Then just 'git clone' plugins right into ~/.vim/bundle/ and they will be detected.
 call pathogen#infect()
-
 
 " Settings for vim-powerline
 "
@@ -140,7 +157,6 @@ call pathogen#infect()
 " some environment settings.
 " $ pushd ~/.vim/bundle && git clone git://github.com/Lokaltog/vim-powerline.git && popd
 set laststatus=2  " Always show the status bar (recommended for powerline)
-
 
 " Settings for ctrlp
 "
