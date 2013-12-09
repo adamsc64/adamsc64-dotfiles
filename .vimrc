@@ -33,16 +33,17 @@ map <c-j> <c-w>j
 map <c-k> <c-w>k
 map <c-l> <c-w>l
 
+" Set mapleader
+let mapleader = ","
+
 " Move around tabs more easily.
 map <Leader>n <esc>:tabprevious<CR>
 map <Leader>m <esc>:tabnext<CR>
+map <Leader>o <esc>:tabedit<Space>
 
 " Move multiple blocks of code, while retaining visual mode.
 vnoremap < <gv
 vnoremap > >gv
-
-" Set mapleader
-let mapleader = ","
 
 " Map the vim 'sort' function.
 "" vnoremap <Leader>s :sort<CR>
@@ -77,6 +78,19 @@ set shiftround    " Round indent to multiple of 'shiftwidth', e.g. for > and <.
 
 " Python setting for 'smartindent'
 set cinwords=if,elif,else,for,while,try,except,finally,def,class
+" Some python.vim syntax files don't include these.
+syn keyword pythonStatement True False abs divmod input open staticmethod all
+syn keyword pythonStatement enumerate int ord str any eval isinstance pow sum
+syn keyword pythonStatement basestring execfile issubclass print super bin
+syn keyword pythonStatement file iter property tuple bool filter len range
+syn keyword pythonStatement type bytearray float list raw_input unichr
+syn keyword pythonStatement callable format locals reduce unicode chr
+syn keyword pythonStatement frozenset long reload vars classmethod getattr map
+syn keyword pythonStatement repr xrange cmp globals max reversed zip compile
+syn keyword pythonStatement hasattr memoryview round __import__ complex hash
+syn keyword pythonStatement min set apply delattr help next setattr buffer
+syn keyword pythonStatement dict hex object slice coerce dir id oct sorted
+syn keyword pythonStatement intern
 
 " Easy breakpoint insertion for the ipython debugger
 " $ sudo pip install ipdb
@@ -204,3 +218,6 @@ inoremap <silent><C-k> <C-R>=OmniPopup('k')<CR>
 " $ wget -O ~/.vim/ftplugin/python_editing.vim http://www.vim.org/scripts/download_script.php?src_id=5492
 set nofoldenable
 
+" Color overrides
+highlight Search term=reverse ctermfg=0 ctermbg=255 gui=reverse
+highlight Error term=reverse cterm=bold ctermfg=0 ctermbg=9 guifg=White guibg=Red
