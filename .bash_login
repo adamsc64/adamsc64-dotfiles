@@ -60,26 +60,17 @@ function set_custom_prompt {
 }
 set_custom_prompt  # invokes function
 
-
-# Sets the terminal title to username, hostname, and $CWD.
-    export PS1="\[\e]2;\u@\H \w\a\]"
-# Current time in dark gray:
-    export PS1+="\[\e[30;1m\]\t"
-# Current hostname in green:
-    export PS1+=" \[\e[0;35m\]\h"
-# @ symbol in dark gray
-    export PS1+="\[\e[30;1m\]@"
-# The current working directory in green
-    export PS1+="\[\e[0;32m\]\w"
-# The classic $
-    export PS1+=" \[\e[30;1m\]\$ "
-# Reset back to normal color.
-    export PS1+="\[\e[0m\]"
 #
 # Also, default ls to colorized display.
 # See http://geoff.greer.fm/lscolors/
     alias ls="ls -G"
     export LSCOLORS=DxGxcxdxCxegedabagacad
+# Set grep to color by default
+    alias grep="grep --color=auto"
+
+# I always forget the name of the MacOS equivalent to strace,
+# so I have it as an alias here.
+    alias strace="dtruss"
 
 # Set $PATH variable. #
 #######################
@@ -91,6 +82,11 @@ set_custom_prompt  # invokes function
 # Always have my own executables come first.
     export PATH=$HOME/bin:$HOME/scripts:$PATH
 
+# Store history permanently and with time
+export HISTFILESIZE=
+export HISTSIZE=
+#export HISTTIMEFORMAT="[%F %T] "
+
 # Amazon Web Services #
 #######################
 # The command line tools depend on an environment variable (EC2_HOME) to locate
@@ -101,3 +97,7 @@ set_custom_prompt  # invokes function
 # sub-directories named bin and lib.
     export EC2_HOME=$HOME/.ec2/ec2-api-tools-1.4.3.0
     export PATH=$PATH:$EC2_HOME/bin
+
+export PYTHONDONTWRITEBYTECODE=1
+
+source ~/.profile  # for local overrides
