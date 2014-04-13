@@ -45,16 +45,16 @@ function set_custom_prompt {
 
     # Sets the terminal title to username, hostname, and $CWD.
     export PS1="\[\e]2;\u@\H \w\a\]"
-    # Current time in dark gray:
+    # Current time:
     export PS1+="$BLACKBOLD\t "
-    # Current hostname in yellow:
-    export PS1+="$YELLOW\h"
-    # @ symbol in dark gray
+    # Current hostname:
+    export PS1+="$PURPLE\h"
+    # @ symbol
     export PS1+="$BLACKBOLD@"
-    # The current working directory in green
+    # The current working directory
     export PS1+="$GREEN\w "
     # The classic $
-    export PS1+="$BLACKBOLD\$ "
+    export PS1+="$GREENBOLD\$ "
     # Reset back to normal color.
     export PS1+="\[\e[0m\]"
 }
