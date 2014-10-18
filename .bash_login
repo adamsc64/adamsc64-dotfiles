@@ -63,8 +63,8 @@ set_custom_prompt  # invokes function
 #
 # Also, default ls to colorized display.
 # See http://geoff.greer.fm/lscolors/
-    alias ls="ls -G"
-    export LSCOLORS=DxGxcxdxCxegedabagacad
+    export CLICOLOR=1
+    export LSCOLORS=FxFxCxDxBxegedabagacad
 # Set grep to color by default
     alias grep="grep --color=auto"
 
