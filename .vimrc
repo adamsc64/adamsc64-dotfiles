@@ -18,6 +18,9 @@ set nocompatible
 " Always yank to system-wide clipboard.
 set clipboard=unnamed
 
+" Use the ruler on the bottom line.
+set ruler
+
 " Mouse-clicks on the terminal will be proxied from terminal to vim
 " application.  As a result, clicking will move the cursor, dragging will
 " perform visual highlight, and scrolling will move vim screen up and down.
@@ -25,7 +28,7 @@ set clipboard=unnamed
 set mouse=a
 
 " Make backspace conform to normal expected behavior.
-set bs=2
+set backspace=indent,eol,start  " same as bs=2
 
 " Move around windows more easily.
 map <c-h> <c-w>h
