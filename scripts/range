@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+"""Prints a range of integers to stdout."""
+import sys
+
+def main(first, last):
+    for i in xrange(first, last):
+        print i
+
+if __name__ == "__main__":
+    first, last = sys.argv[1], sys.argv[2]
+    first, last = int(first), int(last)
+    main(first, last)
