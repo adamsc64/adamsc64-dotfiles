@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+"""
+Prints to ``__stdout__`` a random line from ``__stdin__``.
+"""
+import sys
+import random
+
+
+def choose(fileio):
+    line_count = 0
+    chosen = fileio.readline()
+    for line in fileio:
+        line_count = line_count + 1
+        if not random.randint(0, line_count):
+            chosen = line
+    return chosen
+
+
+if __name__ == "__main__":
+    chosen = choose(sys.__stdin__)
+    sys.stdout.write(chosen)
