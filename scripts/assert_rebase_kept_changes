@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# assert_rebase_kept_changes
+# Run immediately after rebasing to check that the rebase didn't affect the
+# diff, just the commit history.
+# Outputs nothing if the diff hasn't changed, or a diff of what's changed
+# otherwise.
+# Thanks to Simon Weber (@simon-weber)
+
+readonly BRANCH=$(git rev-parse --abbrev-ref=strict HEAD)
+diff -u <(git diff master...${BRANCH}@{1}) <(git diff master...${BRANCH})
