@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+"""Opens first item in current working directory (recursively) that
+matches commandline argument. Prompts for confirmation."""
+import sys
+import os
+
+
+def get_via_index():
+    index = "%s/index.txt" % os.getcwd()
+    index = os.path.expanduser(index)
+    try:
+        return open(index)
+    except IOError:
+        return None
+
+
+def get_via_filesystem():
+    for dirpath, dirnames, filenames in os.walk('.'):
+        for dirname in dirnames:
+            yield os.path.join(os.getcwd(), dirpath, dirname)
+        for filename in filenames:
+            yield os.path.join(os.getcwd(), dirpath, filename)
+
+
+def main(*args):
+    args = " ".join(args)
+    dirlist = get_via_index()
+    if not dirlist:
+        dirlist = get_via_filesystem()
+    for line in dirlist:
+        line = line.strip()
+        if not line.endswith(args):
+            continue
+        print "Found `%s`" % line
+        resp = raw_input('Open it? ')
+        if 'y' in resp.lower():
+            os.popen('open %s' % line).read()
+            break
+    else:
+        print "not found"
+
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    main(*args)
