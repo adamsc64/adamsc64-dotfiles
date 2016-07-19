@@ -101,3 +101,7 @@ export HISTSIZE=
 export PYTHONDONTWRITEBYTECODE=1
 
 source ~/.profile  # for local overrides
+
+# Some helpful git shortcuts
+alias gd='git diff $(git merge-base HEAD upstream/master) HEAD'
+alias gl='git log $(git merge-base HEAD upstream/master)..HEAD'
