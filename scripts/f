@@ -1,0 +1,12 @@
+#!/bin/bash
+# An easy way to search for a file, either using the ``find`` command,
+# or just grepping index.txt if it exists.
+args=$@
+pattern="${args[@]}"
+args="$@"
+if [[ -f index.txt ]];
+then
+    cat index.txt | grep -i "$args"
+else
+    find . -iname *$1*
+fi
