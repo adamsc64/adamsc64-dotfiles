@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+import datetime
+import sys
+import os
+
+
+PATH = os.getcwd()
+
+
+def confirm():
+    res = raw_input("This program will take all files in %s, "
+                    "and move them into new directories "
+                    "according to their timestamp in "
+                    "YYYY/MM/DD/ format.\n\n"
+                    "You ok with that? [Y/n] " % PATH)
+    if res.lower()[0] != "y":
+        return False
+    return True
+
+
+def ensure_directory(year, month):
+    dirname = os.path.join(PATH, "%04d" % year, "%02d" % month)
+    if not os.path.exists(dirname):
+        print "Creating directory %s..." % dirname
+        os.makedirs(dirname)
+    return dirname
+
+
+def try_timestamp_from_filename(path):
+    filename = os.path.split(path)[1]
+    if not (filename.startswith("IMG_") and filename[12:13] == "_"):
+        return None
+    try:
+        possible_year = int(filename[4:8])
+        possible_month = int(filename[8:10])
+        possible_day = int(filename[10:12])
+    except ValueError:
+        return None
+    return datetime.datetime(year=possible_year,
+                             month=possible_month,
+                             day=possible_day,
+                             )
+
+def get_timestamp(path):
+    timestamp = try_timestamp_from_filename(path)
+    if timestamp:
+        return timestamp
+    timestamp = os.path.getmtime(path)
+    timestamp = datetime.datetime.fromtimestamp(timestamp)
+    return timestamp
+
+
+def walk(show_skips=False):
+    for dirpath, dirnames, filenames in os.walk(PATH):
+        print "Starting walk of directory: %s" % dirpath
+        for filename in filenames:
+            path = "%s/%s" % (dirpath, filename)
+            timestamp = get_timestamp(path)
+            destination = ensure_directory(year=timestamp.year,
+                                           month=timestamp.month,
+                                           )
+            destination = os.path.join(destination, filename)
+            if path == destination:
+                if show_skips:
+                    print "%s is already in the right place; skipping." % destination
+                continue
+            if os.path.exists(destination):
+                print "Won't move %s to %s - something else exists there; skipping." % (path, destination)
+                continue
+            print "Moving %s to %s..." % (path, destination)
+            os.rename(path, destination)
+
+
+def main():
+    walk()
+
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    skip_confirm = False
+    if args and args[0]:
+        if "--yes" in args:
+            skip_confirm = True
+    if (not skip_confirm) and not confirm():
+        exit(0)
+    main()
+
