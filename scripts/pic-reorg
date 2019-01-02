@@ -60,6 +60,9 @@ def main():
         for filename in filenames:
             path = "%s/%s" % (dirpath, filename)
             print('Processing file: %s...' % path)
+            if filename == '.DS_Store':
+                print('Ignoring file: %s' % path)
+                continue
             timestamp = get_timestamp(path)
             destination = ensure_directory(year=timestamp.year,
                                            month=timestamp.month,
