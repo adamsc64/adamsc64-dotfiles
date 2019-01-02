@@ -51,7 +51,7 @@ def get_timestamp(path):
     return timestamp
 
 
-def walk(show_skips=False):
+def main(show_skips=False):
     for dirpath, dirnames, filenames in os.walk(PATH):
         print "Starting walk of directory: %s" % dirpath
         for filename in filenames:
@@ -70,10 +70,6 @@ def walk(show_skips=False):
                 continue
             print "Moving %s to %s..." % (path, destination)
             os.rename(path, destination)
-
-
-def main():
-    walk()
 
 
 if __name__ == '__main__':
