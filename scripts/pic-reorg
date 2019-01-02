@@ -54,19 +54,19 @@ def get_timestamp(path):
     return timestamp
 
 
-def main(show_skips=False):
+def main():
     for dirpath, dirnames, filenames in os.walk(PATH):
         print("Starting walk of directory: %s" % dirpath)
         for filename in filenames:
             path = "%s/%s" % (dirpath, filename)
+            print('Processing file: %s...' % path)
             timestamp = get_timestamp(path)
             destination = ensure_directory(year=timestamp.year,
                                            month=timestamp.month,
                                            )
             destination = os.path.join(destination, filename)
             if path == destination:
-                if show_skips:
-                    print("%s is already in the right place; skipping." % destination)
+                print("Already in the right place; skipping: %s" % destination)
                 continue
             if os.path.exists(destination):
                 print("Won't move %s to %s - something else exists there; skipping." % (path, destination))
