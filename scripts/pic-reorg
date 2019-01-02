@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import datetime
-import sys
 import os
 
 
@@ -41,6 +40,7 @@ def try_timestamp_from_filename(path):
                              month=possible_month,
                              day=possible_day,
                              )
+
 
 def get_timestamp(path):
     timestamp = try_timestamp_from_filename(path)
