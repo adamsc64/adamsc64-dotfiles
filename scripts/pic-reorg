@@ -21,7 +21,7 @@ def confirm():
 def ensure_directory(year, month):
     dirname = os.path.join(PATH, "%04d" % year, "%02d" % month)
     if not os.path.exists(dirname):
-        print "Creating directory %s..." % dirname
+        print("Creating directory %s..." % dirname)
         os.makedirs(dirname)
     return dirname
 
@@ -53,7 +53,7 @@ def get_timestamp(path):
 
 def main(show_skips=False):
     for dirpath, dirnames, filenames in os.walk(PATH):
-        print "Starting walk of directory: %s" % dirpath
+        print("Starting walk of directory: %s" % dirpath)
         for filename in filenames:
             path = "%s/%s" % (dirpath, filename)
             timestamp = get_timestamp(path)
@@ -63,12 +63,12 @@ def main(show_skips=False):
             destination = os.path.join(destination, filename)
             if path == destination:
                 if show_skips:
-                    print "%s is already in the right place; skipping." % destination
+                    print("%s is already in the right place; skipping." % destination)
                 continue
             if os.path.exists(destination):
-                print "Won't move %s to %s - something else exists there; skipping." % (path, destination)
+                print("Won't move %s to %s - something else exists there; skipping." % (path, destination))
                 continue
-            print "Moving %s to %s..." % (path, destination)
+            print("Moving %s to %s..." % (path, destination))
             os.rename(path, destination)
 
 
