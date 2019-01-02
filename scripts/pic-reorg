@@ -21,7 +21,7 @@ def ensure_directory(year, month):
     dirname = os.path.join(PATH, "%04d" % year, "%02d" % month)
     if not os.path.exists(dirname):
         print("Creating directory %s..." % dirname)
-        if confirm():
+        if SKIP_CONFIRMATION or confirm():
             os.makedirs(dirname)
         else:
             print('Exiting...')
@@ -75,25 +75,27 @@ def main():
                 print("Won't move %s to %s - something else exists there; skipping." % (path, destination))
                 continue
             print("Moving %s to %s..." % (path, destination))
-            if confirm():
+            if SKIP_CONFIRMATION or confirm():
                 os.rename(path, destination)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Reorganizes the locations of pictures in a directory '
-        'tree into an opinionated alternative.'
+        'tree into an opinionated alternative (acccording to their timestamp '
+        'in YYYY/MM/DD/ format).'
     )
     parser.add_argument(
         '-y', '--yes',
         action='store_true',
-        help='skip confirmation',
+        help='skip all confirmation',
     )
     args = parser.parse_args()
     confirm_text = ("This program will take all files in %s, "
                     "and move them into new directories "
                     "according to their timestamp in "
                     "YYYY/MM/DD/ format." % PATH)
-    if (not args.yes) and not confirm(confirm_text):
+    SKIP_CONFIRMATION = args.yes
+    if (not SKIP_CONFIRMATION) and not confirm(confirm_text):
         exit(0)
     main()
