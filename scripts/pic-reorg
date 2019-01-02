@@ -21,7 +21,11 @@ def ensure_directory(year, month):
     dirname = os.path.join(PATH, "%04d" % year, "%02d" % month)
     if not os.path.exists(dirname):
         print("Creating directory %s..." % dirname)
-        os.makedirs(dirname)
+        if confirm():
+            os.makedirs(dirname)
+        else:
+            print('Exiting...')
+            exit(0)
     return dirname
 
 
@@ -68,7 +72,8 @@ def main(show_skips=False):
                 print("Won't move %s to %s - something else exists there; skipping." % (path, destination))
                 continue
             print("Moving %s to %s..." % (path, destination))
-            os.rename(path, destination)
+            if confirm():
+                os.rename(path, destination)
 
 
 if __name__ == '__main__':
