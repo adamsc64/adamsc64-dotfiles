@@ -7,13 +7,12 @@ import os
 PATH = os.getcwd()
 
 
-def confirm():
-    res = raw_input("This program will take all files in %s, "
-                    "and move them into new directories "
-                    "according to their timestamp in "
-                    "YYYY/MM/DD/ format.\n\n"
-                    "You ok with that? [Y/n] " % PATH)
-    if res.lower()[0] != "y":
+def confirm(text=None):
+    if text:
+        print(text)
+        print()
+    res = raw_input("You ok with that? [y/N] ")
+    if not res or res.lower()[0] != "y":
         return False
     return True
 
@@ -83,6 +82,10 @@ if __name__ == '__main__':
         help='skip confirmation',
     )
     args = parser.parse_args()
-    if (not args.yes) and not confirm():
+    confirm_text = ("This program will take all files in %s, "
+                    "and move them into new directories "
+                    "according to their timestamp in "
+                    "YYYY/MM/DD/ format." % PATH)
+    if (not args.yes) and not confirm(confirm_text):
         exit(0)
     main()
