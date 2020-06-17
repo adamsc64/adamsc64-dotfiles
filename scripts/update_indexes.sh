@@ -1,5 +1,5 @@
 #!/bin/bash
-set -Eeuxo
+set -Eeu -o pipefail
 # Creates an index file, ``index.txt`` for a series useful directories.
 # This is just a recursive list of files inside a directory.
 paths=("$@")
