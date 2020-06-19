@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Prints first directory inside current working directory
+Prints the first directory inside current working directory
 (recursively) that matches commandline argument. Prompts for
 confirmation.
+
+Example usage:
+$ cd $(cdd mydirectory)  # will change to the output
 """
 import sys
 import os
