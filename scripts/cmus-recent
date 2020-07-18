@@ -1,0 +1,11 @@
+#!/bin/bash
+set -Eeu -o pipefail
+
+if [ $# -eq 0 ]
+  then
+    echo "$0: A script to enqueue to cmus recently downloaded files"
+    echo ""
+    echo "Argument required: past time to enqueue (e.g. '$0 30d')"
+    exit 1
+fi
+find ~/Dropbox/Chris/media -Btime -$1 -print0 | xargs -0 cmus-remote -l
