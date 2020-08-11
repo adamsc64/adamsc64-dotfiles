@@ -1,5 +1,5 @@
 #!/bin/bash
-set -Eeuxo pipefail
+set -Eeu -o pipefail
 # An easy way to search for a file, either using the ``find`` command,
 # or just grepping index.txt if it exists.
 if [[ -f index.txt ]];
