@@ -1,0 +1,76 @@
+#!/Users/chris/virtualenvs/env37/bin/python
+'''
+Script to speak an image.
+
+Installation:
+    - Install tesseract:
+    $ sudo apt-get install tesseract
+
+    - Grab trained English data on Github:
+    $ sudo wget \
+          -P /opt/local/share/tessdata/ \
+          https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
+
+    - Install python libraries:
+    $ pip install pytesseract pyttsx3
+'''
+import argparse
+import os
+import time
+
+import pytesseract
+from PIL import Image
+import pyttsx3
+
+
+# path where the tesseract module is installed
+pytesseract.pytesseract.tesseract_cmd = ('/opt/local/bin/tesseract')
+
+
+def process(filename):
+    print('Opening image...')
+    img = Image.open(filename)
+    print('Image information:')
+    print(img)
+    print('Converting image to string...')
+    result = pytesseract.image_to_string(img)
+    print(result)
+    print('Initializing speech engine...')
+    engine = pyttsx3.init()
+    engine.setProperty('rate', 300)
+    print('Generating speech...')
+    engine.say(result)
+    print('Running speech engine...')
+    engine.runAndWait()
+
+
+def main(args):
+    if not args.filename:
+        return
+    elif os.path.isfile(args.filename):
+        process(args.filename)
+    elif os.path.isdir(args.filename):
+        print('Running in watch mode.')
+        previous = set(os.listdir(args.filename))
+        while True:
+            time.sleep(.1)
+            current = set(os.listdir(args.filename))
+            extra = current.difference(previous)
+            if not extra:
+                continue
+            previous = current
+            for filename in extra:
+                if filename.startswith('.'):
+                    continue
+                process(os.path.join(args.filename, filename))
+    print('Other file types not supported.')
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename", help="source image file or directory")
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    main(parse_args())
