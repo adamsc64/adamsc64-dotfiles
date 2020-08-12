@@ -1,0 +1,46 @@
+#!/Users/chris/virtualenvs/env37/bin/python
+import argparse
+import sys
+
+from PIL import Image
+
+
+def remove_transparency(img_path, dest=None):
+    if not dest:
+        dest = img_path
+    return Image.open(img_path).convert('RGB').save(dest)
+
+
+def print_info(img_path):
+    img = Image.open(img_path)
+    print('Image information:')
+    print('filename: {}'.format(img.filename))
+    print('format: {}'.format(img.format))
+    print('mode: {}'.format(img.mode))
+    print('size: {}'.format(img.size))
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filenames',
+                        nargs='+',
+                        help='source image files')
+    parser.add_argument('--dest',
+                        help='destination image')
+    parser.add_argument('--remove-transparency',
+                        action='store_true',
+                        help='remove transparency layer')
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    for filename in args.filenames:
+        if args.remove_transparency:
+            remove_transparency(filename, args.dest)
+        else:
+            print_info(filename)
+
+
+if __name__ == '__main__':
+    main()
