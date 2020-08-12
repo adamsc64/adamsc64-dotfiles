@@ -31,7 +31,9 @@ def process(filename):
     print('Opening image...')
     img = Image.open(filename)
     print('Image information:')
-    print(img)
+    print('filename: {}'.format(img.filename))
+    print('format: {}'.format(img.format))
+    print('size: {}'.format(img.size))
     print('Converting image to string...')
     result = pytesseract.image_to_string(img)
     print(result)
@@ -42,6 +44,7 @@ def process(filename):
     engine.say(result)
     print('Running speech engine...')
     engine.runAndWait()
+    print('Finished speech.')
 
 
 def main(args):
@@ -63,6 +66,8 @@ def main(args):
                 if filename.startswith('.'):
                     continue
                 process(os.path.join(args.filename, filename))
+            print('Continuing to run in watch mode.')
+
     print('Other file types not supported.')
 
 
