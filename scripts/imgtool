@@ -1,4 +1,13 @@
 #!/Users/chris/virtualenvs/env37/bin/python
+'''
+A quick collection of tooling around image processing.
+
+Prerequisites:
+- Python Imaging Library (PIL or Pillow)
+
+Some subcommands require more prerequisites. See docstrings.
+'''
+
 import argparse
 import os
 import shutil
@@ -22,6 +31,25 @@ def convert_images_to_pdf(images, dest):
     '''
     Given an ordered list of filenames at ``images``, this function
     converts them all into a single PDF file at destination ``dest``.
+
+    Prerequisites:
+
+    - Install tesseract:
+    $ sudo apt-get install tesseract
+
+    - Grab trained data on Github, e.g. for English:
+    $ sudo wget \
+          -P /opt/local/share/tessdata/ \
+          https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
+
+    - pip install pytesseract
+
+    - Install pdftk, e.g. "sudo port install pdftk"
+
+    - If you get `fatal error: string.h: No such file or directory`,
+      you may need to install C++ headers to get pdftk compiled. On
+      MacOS 10.14, for example:
+    $ open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
     '''
     # Require tesseract
     tesseract_bin = shutil.which('tesseract')
