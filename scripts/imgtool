@@ -1,14 +1,61 @@
 #!/Users/chris/virtualenvs/env37/bin/python
 import argparse
+import os
+import shutil
 import sys
+import tempfile
 
-from PIL import Image
+
+try:
+    from PIL import Image
+except ModuleNotFoundError:
+    sys.exit('Error: PIL or Pillow required')
 
 
 def remove_transparency(img_path, dest=None):
     if not dest:
         dest = img_path
     return Image.open(img_path).convert('RGB').save(dest)
+
+
+def convert_images_to_pdf(images, dest):
+    '''
+    Given an ordered list of filenames at ``images``, this function
+    converts them all into a single PDF file at destination ``dest``.
+    '''
+    # Require tesseract
+    tesseract_bin = shutil.which('tesseract')
+    if not tesseract_bin:
+        sys.exit('Error: tesseract required to convert images to PDF')
+    # Require pytesseract
+    try:
+        import pytesseract
+    except ModuleNotFoundError:
+        sys.exit('Error: pytesseract required to convert images to PDF')
+    pytesseract.pytesseract.tesseract_cmd = tesseract_bin
+    # Require pdftk
+    pdftk_bin = shutil.which('pdftk')
+    if not pdftk_bin:
+        sys.exit('Error: pdftk required to convert images to PDF')
+    cwd = os.getcwd()
+    with tempfile.TemporaryDirectory() as tempdir:
+        pdfs_generated = []
+        for image in images:
+            pdfdest = image + '.pdf'
+            pdfdata = pytesseract.image_to_pdf_or_hocr(Image.open(image))
+            with open(os.path.join(tempdir, pdfdest), 'wb') as pdfout:
+                pdfout.write(pdfdata)
+            pdfs_generated.append(pdfdest)
+        os.chdir(tempdir)
+        if os.system('{} {} cat output {}'.format(pdftk_bin,
+                                                  ' '.join(pdfs_generated),
+                                                  '_tmpoutfile.pdf',
+                                                  )):
+            sys.exit('pdftk exited with error')
+        shutil.move(
+            os.path.join(tempdir, '_tmpoutfile.pdf'),
+            os.path.join(cwd, dest),
+        )
 
 
 def print_info(img_path):
@@ -30,15 +77,23 @@ def parse_args():
     parser.add_argument('--remove-transparency',
                         action='store_true',
                         help='remove transparency layer')
+    parser.add_argument('--to-pdf',
+                        action='store_true',
+                        help='convert images to pdf')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    for filename in args.filenames:
-        if args.remove_transparency:
+    if args.remove_transparency:
+        for filename in args.filenames:
             remove_transparency(filename, args.dest)
-        else:
+    if args.to_pdf:
+        if not args.dest:
+            sys.exit('--dest option required to convert images to PDF')
+        convert_images_to_pdf(args.filenames, args.dest)
+    else:
+        for filename in args.filenames:
             print_info(filename)
 
 
