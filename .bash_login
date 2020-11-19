@@ -75,9 +75,7 @@ set_custom_prompt  # invokes function
 # Set $PATH variable. #
 #######################
 # Note that these definitions are in reverse order.
-# MacPorts third (e.g., MacPorts python is at /opt/local/bin).
-    export PATH=/opt/local/bin:/opt/local/sbin:$PATH
-# Shared local scripts second.
+# Shared local scripts.
     export PATH=/usr/local/bin:/usr/local/sbin:$PATH
 # Always have my own executables come first.
     export PATH=$HOME/bin:$HOME/scripts:$PATH
