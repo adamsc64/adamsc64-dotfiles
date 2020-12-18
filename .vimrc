@@ -111,7 +111,7 @@ set t_Co=256
 "
 " Color schemes should be *.vim files inside $HOME/.vim/colors/
 " Here are two nice ones:
-" $ curl http://www.vim.org/scripts/download_script.php?src_id=17973 > ~/.vim/colors/pychimp.vim
+" $ curl https://raw.githubusercontent.com/notpratheek/Pychimp-vim/master/pychimp.vim > ~/.vim/colors/pychimp.vim
 " $ curl http://www.vim.org/scripts/download_script.php?src_id=13400 > ~/.vim/colors/wombat256mod.vim
 " If placed before wombat256mod, this defaults to black.
 "autocmd ColorScheme * highlight Normal ctermbg=black
@@ -158,15 +158,6 @@ nmap Q gqap
 " Huge history
 set history=700
 set undolevels=700
-
-"""""""""""""""""""""""""""
-" PATHOGEN PLUGIN MANAGER "
-"""""""""""""""""""""""""""
-" To set up the Pathogen plugin manager:
-" 1. $ mkdir -p ~/.vim/autoload ~/.vim/bundle
-" 2. $ curl -o ~/.vim/autoload/pathogen.vim https://raw.github.com/tpope/vim-pathogen/HEAD/autoload/pathogen.vim
-" 3. Then just 'git clone' plugins right into ~/.vim/bundle/ and they will be detected.
-call pathogen#infect()
 
 " Settings for vim-powerline
 "
