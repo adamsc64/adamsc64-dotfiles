@@ -7,6 +7,7 @@ dotfiles=(
     .gitconfig
     .gitignore_global
     .zshenv
+    .zshrc
 )
 for dotfile in "${dotfiles[@]}"
 do
