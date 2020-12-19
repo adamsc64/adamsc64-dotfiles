@@ -1,6 +1,12 @@
 #!/bin/bash
 set -Eeux -o pipefail
-dotfiles=(.vimrc .bash_login .psqlrc .gitconfig .gitignore_global)
+dotfiles=(
+    .vimrc
+    .bash_login
+    .psqlrc
+    .gitconfig
+    .gitignore_global
+)
 for dotfile in "${dotfiles[@]}"
 do
     srcpath="$PWD/$dotfile"
