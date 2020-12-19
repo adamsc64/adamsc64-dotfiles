@@ -6,6 +6,7 @@ dotfiles=(
     .psqlrc
     .gitconfig
     .gitignore_global
+    .zshenv
 )
 for dotfile in "${dotfiles[@]}"
 do
