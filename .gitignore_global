@@ -27,6 +27,7 @@
 *.sql
 *.sqlite
 *.db
+.ipynb_checkpoints
 
 # MacOS generated files #
 #########################
