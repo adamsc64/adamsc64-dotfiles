@@ -1,4 +1,4 @@
-#!/Users/chris/virtualenvs/env38/bin/python
+#!/Users/chris/virtualenvs/env3/bin/python
 '''
 Script to speak an image.
 
@@ -23,8 +23,13 @@ from PIL import Image
 import pyttsx3
 
 
-# path where the tesseract module is installed
-pytesseract.pytesseract.tesseract_cmd = ('/opt/local/bin/tesseract')
+def get_tesseract_cmd():
+    'Get path where the tesseract module is installed'
+    options = ('/opt/local/bin/tesseract', '/usr/local/bin/tesseract')
+    for option in options:
+        if os.path.exists(option):
+            return option
+    raise OSError('tesseract binary not found')
 
 
 def process(filename):
@@ -78,4 +83,5 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    pytesseract.pytesseract.tesseract_cmd = get_tesseract_cmd()
     main(parse_args())
