@@ -57,3 +57,10 @@ set_custom_prompt  # invokes function
 alias ls="ls -G"
 export LSCOLORS="FxFxCxDxBxegedabagacad"
 export GREP_OPTIONS='--color=auto'
+
+export HISTFILESIZE=1000000000
+export HISTSIZE=1000000000
+setopt INC_APPEND_HISTORY
+export HISTTIMEFORMAT="[%F %T] "
+setopt EXTENDED_HISTORY
+setopt HIST_FIND_NO_DUPS
