@@ -53,6 +53,7 @@ function set_custom_prompt {
 set_custom_prompt  # invokes function
 
 
-# Colorize ls
+# Colorize ls and grep
 alias ls="ls -G"
-
+export LSCOLORS="FxFxCxDxBxegedabagacad"
+export GREP_OPTIONS='--color=auto'
