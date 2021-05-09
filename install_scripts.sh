@@ -2,7 +2,7 @@
 set -Eeu -o pipefail
 SCRIPTS_BASE=~/scripts
 mkdir -p $SCRIPTS_BASE
-scripts=(f update_indexes.sh cdd trim random random_numbers.py)
+scripts=(f update_indexes.sh cdd trim random random_numbers.py img2say)
 for script in "${scripts[@]}"
 do
     srcpath="$PWD/scripts/$script"
