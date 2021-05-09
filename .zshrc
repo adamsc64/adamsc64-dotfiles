@@ -36,8 +36,8 @@ function set_custom_prompt {
     local RESETCOLOR="%{$reset_color%}"
 
     PS1=""
-    # Current time
-    PS1+="$BLACKBOLD%t "
+    # Current date and time
+    PS1+="$BLACKBOLD%D %t "
     # Current hostname
     PS1+="$BLUEBOLD%m"
     # @ symbol
