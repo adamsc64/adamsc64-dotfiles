@@ -66,3 +66,4 @@ setopt INC_APPEND_HISTORY
 export HISTTIMEFORMAT="[%F %T] "
 setopt EXTENDED_HISTORY
 setopt HIST_FIND_NO_DUPS
+stty erase '^?'
