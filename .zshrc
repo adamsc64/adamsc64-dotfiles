@@ -60,6 +60,8 @@ export GREP_OPTIONS='--color=auto'
 
 export HISTFILESIZE=1000000000
 export HISTSIZE=1000000000
+[ -z "$HISTFILE" ] && export HISTFILE="$HOME/.zsh_history"
+export SAVEHIST=$HISTSIZE
 setopt INC_APPEND_HISTORY
 export HISTTIMEFORMAT="[%F %T] "
 setopt EXTENDED_HISTORY
