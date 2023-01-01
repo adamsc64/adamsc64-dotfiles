@@ -1,0 +1,43 @@
+#!/Users/chris/virtualenvs/env3/bin/python
+"""
+Script to speak text from stdin or from filenames given as arguments.
+
+Installation:
+    - Install python libraries:
+    $ pip install pyttsx3
+"""
+import sys
+import fileinput
+
+import pyttsx3
+
+
+class Speaker:
+    def __init__(self, rate=300):
+        log("Initializing speech engine...")
+        self.engine = pyttsx3.init()
+        self.engine.setProperty("rate", rate)
+
+    def say(self, *args, **kwargs):
+        log("Generating speech...")
+        self.engine.say(*args, **kwargs)
+        log("Running speech engine...")
+        self.engine.runAndWait()
+        log("Finished speech.")
+
+
+def main():
+    speaker = Speaker()
+    files = [_ for _ in sys.argv[1:] if not _.startswith("-")]
+    for line in fileinput.input(files=files):
+        speaker.say(line)
+
+
+def log(text):
+    if verbose:
+        print(text)
+
+
+if __name__ == "__main__":
+    verbose = "--verbose" in sys.argv
+    main()
