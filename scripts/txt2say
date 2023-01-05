@@ -4,7 +4,7 @@ Script to speak text from stdin or from filenames given as arguments.
 
 Installation:
     - Install python libraries:
-    $ pip install gtts
+    $ pip install gtts pydub
 
     - Install mplayer to use --play option:
     $ brew install mplayer
@@ -19,15 +19,29 @@ try:
 except ImportError:
     sys.exit("The gtts python library is required.")
 
+try:
+    import pydub
+    import pydub.playback
+except ImportError:
+    sys.exit("The pydub python library is required.")
+
 
 def save(text, filename):
     recorder = gTTS(text=text, slow=False)  # , lang=language, slow=False)
     log(f"Saving {filename}...")
     recorder.save(filename)
+    if args.use_pydub:
+        log(f"Speeding up {filename}...")
+        seg = pydub.AudioSegment.from_file(filename)
+        seg = seg.speedup(args.speedup)
+        log(f"Resaving {filename}...")
+        seg.export(filename)
     if args.play:
         log(f"Playing {filename}...")
-        speed_factor = 1.5
-        command = f"mplayer -noar -af scaletempo -speed {speed_factor} {filename}"
+        if args.use_pydub:
+            pydub.playback.play(seg)
+            return
+        command = f"mplayer -noar -af scaletempo -speed {args.speedup} {filename}"
         if args.verbose:
             os.system(f"{command}")
         else:
@@ -56,7 +70,13 @@ def parse_args():
         "--verbose", action="store_true", help="don't print result to stdout"
     )
     parser.add_argument(
+        "--speedup", type=float, default=1.5, help="speedup factor"
+    )
+    parser.add_argument(
         "--play", action="store_true", help="play the resulting file immediately"
+    )
+    parser.add_argument(
+        "--use-pydub", action="store_true", help="speedup with pydub instead of mplayer"
     )
     parser.add_argument(
         "--sample",
