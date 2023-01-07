@@ -1,4 +1,4 @@
-PATH=$PATH:~/scripts
+PATH=$PATH:~/scripts:~/bin
 PATH="/usr/local/opt/openjdk/bin:$PATH"
 export PATH
 
