@@ -6,3 +6,5 @@ CPPFLAGS="-I/usr/local/opt/openjdk/include"
 export CPPFLAGS
 
 alias adb=~/coding/android/platform-tools/adb
+
+[ -f ".zshenv.local" ] && source ".zshenv.local"
