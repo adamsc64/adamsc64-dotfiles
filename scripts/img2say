@@ -1,5 +1,5 @@
 #!/Users/chris/virtualenvs/env3/bin/python
-'''
+"""
 Script to speak an image.
 
 Installation:
@@ -19,7 +19,7 @@ Installation:
 
     - This script requires that the 'txt2say' utility (another script in
       this repo) is available to run on system path.
-'''
+"""
 import argparse
 import os
 import time
@@ -29,28 +29,29 @@ from PIL import Image
 
 
 def get_tesseract_cmd():
-    'Get path where the tesseract module is installed'
-    options = ('/opt/local/bin/tesseract', '/usr/local/bin/tesseract')
+    "Get path where the tesseract module is installed"
+    options = ("/opt/local/bin/tesseract", "/usr/local/bin/tesseract")
     for option in options:
         if os.path.exists(option):
             return option
-    raise OSError('tesseract binary not found')
+    raise OSError("tesseract binary not found")
 
 
 def extract(filename):
-    print('Opening image...')
+    print("Opening image...")
     img = Image.open(filename)
-    print('Image information:')
-    print('filename: {}'.format(img.filename))
-    print('format: {}'.format(img.format))
-    print('size: {}'.format(img.size))
-    print('Converting image to string...')
+    print("Image information:")
+    print("filename: {}".format(img.filename))
+    print("format: {}".format(img.format))
+    print("size: {}".format(img.size))
+    print("Converting image to string...")
     return pytesseract.image_to_string(img)
 
 
 def say(result):
     from subprocess import Popen, PIPE, STDOUT
-    with Popen(['txt2say'], stdout=PIPE, stdin=PIPE, stderr=STDOUT) as proc:
+
+    with Popen(["txt2say"], stdout=PIPE, stdin=PIPE, stderr=STDOUT) as proc:
         proc.communicate(input=result.encode())[0]
 
 
@@ -71,35 +72,38 @@ def main(args):
     elif os.path.isfile(args.filename):
         process(args.filename, quiet=args.quiet, speak=args.speak)
     elif os.path.isdir(args.filename):
-        print('Running in watch mode.')
+        print("Running in watch mode.")
         previous = set(os.listdir(args.filename))
         while True:
-            time.sleep(.1)
+            time.sleep(0.1)
             current = set(os.listdir(args.filename))
             extra = current.difference(previous)
             if not extra:
                 continue
             previous = current
             for filename in extra:
-                if filename.startswith('.'):
+                if filename.startswith("."):
                     continue
-                process(os.path.join(args.filename, filename),
-                        quiet=args.quiet,
-                        speak=args.speak,
-                        )
-            print('Continuing to run in watch mode.')
+                process(
+                    os.path.join(args.filename, filename),
+                    quiet=args.quiet,
+                    speak=args.speak,
+                )
+            print("Continuing to run in watch mode.")
 
-    print('Other file types not supported.')
+    print("Other file types not supported.")
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", help="source image file or directory")
-    parser.add_argument("--quiet", action="store_true", help="don't print result to stdout")
+    parser.add_argument(
+        "--quiet", action="store_true", help="don't print result to stdout"
+    )
     parser.add_argument("--speak", action="store_true", help="speak result")
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytesseract.pytesseract.tesseract_cmd = get_tesseract_cmd()
     main(parse_args())
