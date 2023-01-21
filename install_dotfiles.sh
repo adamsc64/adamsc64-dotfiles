@@ -1,5 +1,5 @@
 #!/bin/bash
-set -Eeux -o pipefail
+set -Eeu -o pipefail
 dotfiles=(
     .vimrc
     .bash_login
@@ -16,5 +16,7 @@ do
     if [[ ! -L "$destpath" ]]
     then
         ln -s $srcpath $destpath
+    else
+        echo "$destpath link already created"
     fi
 done
