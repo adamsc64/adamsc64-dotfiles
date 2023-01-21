@@ -12,7 +12,10 @@ Installation:
           https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
 
     - Install python libraries:
-    $ pip install pytesseract pyttsx3
+    $ pip install pytesseract
+
+    - This script requires that 'txt2say' (another script in this repo) is
+      available to run on path.
 '''
 import argparse
 import os
@@ -20,7 +23,6 @@ import time
 
 import pytesseract
 from PIL import Image
-import pyttsx3
 
 
 def get_tesseract_cmd():
@@ -44,14 +46,9 @@ def extract(filename):
 
 
 def say(result):
-    print('Initializing speech engine...')
-    engine = pyttsx3.init()
-    engine.setProperty('rate', 300)
-    print('Generating speech...')
-    engine.say(result)
-    print('Running speech engine...')
-    engine.runAndWait()
-    print('Finished speech.')
+    from subprocess import Popen, PIPE, STDOUT
+    with Popen(['txt2say'], stdout=PIPE, stdin=PIPE, stderr=STDOUT) as proc:
+        proc.communicate(input=result.encode())[0]
 
 
 def process(filename, quiet, speak):
