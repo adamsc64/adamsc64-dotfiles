@@ -4,18 +4,21 @@ Script to speak an image.
 
 Installation:
     - Install tesseract:
-    $ sudo apt-get install tesseract
+        $ sudo apt-get install tesseract
+        or:
+        $ brew install tesseract
 
-    - Grab trained English data on Github:
-    $ sudo wget \
-          -P /opt/local/share/tessdata/ \
-          https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
+    - Homebrew usually installs trained English language data
+      automatically. If it does not, you may need to install it manually:
+        $ TESSDATA=/usr/local/Cellar/tesseract/[version]/share/tessdata/
+        $ TRAINED=https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
+        $ wget -P $TESSDATA $TRAINED
 
     - Install python libraries:
     $ pip install pytesseract
 
-    - This script requires that 'txt2say' (another script in this repo) is
-      available to run on path.
+    - This script requires that the 'txt2say' utility (another script in
+      this repo) is available to run on system path.
 '''
 import argparse
 import os
