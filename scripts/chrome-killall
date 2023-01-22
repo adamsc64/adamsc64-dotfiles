@@ -1,3 +1,8 @@
 #!/bin/bash
 set -Eeuxo pipefail
-ps aux -m | grep Chrome | grep Renderer | awk {'print $2'} | xargs kill
+ps x -m -o pid,rss,%mem,command \
+    | grep Chrome \
+    | grep Renderer \
+    | grep -v extension-process \
+    | awk {'print $1'} \
+    | xargs kill
