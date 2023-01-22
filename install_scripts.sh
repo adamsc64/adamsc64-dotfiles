@@ -10,6 +10,7 @@ scripts=(
     random
     random_numbers.py
     img2say
+    chrome-killall
 )
 for script in "${scripts[@]}"
 do

@@ -1,0 +1,3 @@
+#!/bin/bash
+set -Eeuxo pipefail
+ps aux -m | grep Chrome | grep Renderer | awk {'print $2'} | xargs kill
