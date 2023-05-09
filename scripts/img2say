@@ -10,9 +10,12 @@ Installation:
 
     - Homebrew usually installs trained English language data
       automatically. If it does not, you may need to install it manually:
-        $ TESSDATA=/usr/local/Cellar/tesseract/[version]/share/tessdata/
+        $ TESSBASE=/usr/local/Cellar/tesseract
+        $ [ -d "$TESSBASE" ] || TESSBASE=/opt/homebrew/Cellar/tesseract
+        $ TESSDATA=$(find $TESSBASE -name tessdata -type d)
+            # should be something like <version>/share/tessdata/
         $ TRAINED=https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
-        $ wget -P $TESSDATA $TRAINED
+        $ wget -P $TESSDATA/ $TRAINED
 
     - Install python libraries:
     $ pip install pytesseract
@@ -30,7 +33,10 @@ from PIL import Image
 
 def get_tesseract_cmd():
     "Get path where the tesseract module is installed"
-    options = ("/opt/local/bin/tesseract", "/usr/local/bin/tesseract")
+    options = ("/opt/local/bin/tesseract",
+               "/usr/local/bin/tesseract",
+               "/opt/homebrew/bin/tesseract",
+               )
     for option in options:
         if os.path.exists(option):
             return option
