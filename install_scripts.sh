@@ -11,6 +11,7 @@ scripts=(
     random_numbers.py
     img2say
     chrome-killall
+    youtube-audio-cut
 )
 for script in "${scripts[@]}"
 do
