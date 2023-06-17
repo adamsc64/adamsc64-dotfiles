@@ -70,3 +70,4 @@ setopt HIST_FIND_NO_DUPS
 stty erase '^?'
 
 [ -f ".zshrc.local" ] && source ".zshrc.local"
+export PATH="/usr/local/sbin:$PATH"
