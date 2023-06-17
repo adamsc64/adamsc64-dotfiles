@@ -6,6 +6,9 @@ import subprocess
 import os
 import shutil
 
+TMP_RAW_ORIGINAL = "/tmp/youtube-audio-cut-{}.original.mp3".format(os.getpid())
+TMP_CUT = "/tmp/youtube-audio-cut-{}.cut.mp3".format(os.getpid())
+
 
 def main():
     parser = argparse.ArgumentParser(description="Process YouTube audio.")
@@ -15,14 +18,11 @@ def main():
 
     args = parser.parse_args()
 
-    original_data = "/tmp/youtube-audio-cut-{}.original.mp3".format(os.getpid())
-    cut_data = "/tmp/youtube-audio-cut-{}.cut.mp3".format(os.getpid())
-
     # Download the YouTube video as an audio file
     download_cmd = [
         "youtube-dl",
         "-o",
-        original_data,
+        TMP_RAW_ORIGINAL,
         "-x",
         "--audio-format",
         "mp3",
@@ -36,29 +36,29 @@ def main():
     ffmpeg_cmd = [
         "ffmpeg",
         "-i",
-        original_data,
+        TMP_RAW_ORIGINAL,
         "-ss",
         args.start_time,
         "-to",
         args.end_time,
-        cut_data,
+        TMP_CUT,
     ]
     subprocess.run(ffmpeg_cmd, check=True)
 
     # Move the audio file to the current directory
     destination = os.getcwd() + "/audio-capture-cut.mp3"
-    shutil.move(cut_data, destination)
+    shutil.move(TMP_CUT, destination)
     print(f"Audio file saved to {destination}")
     cleanup()
 
 
 def cleanup():
     # Delete temporary files if they exist
-    if os.path.exists(original_data):
-        os.remove(original_data)
+    if os.path.exists(TMP_RAW_ORIGINAL):
+        os.remove(TMP_RAW_ORIGINAL)
 
-    if os.path.exists(cut_data):
-        os.remove(cut_data)
+    if os.path.exists(TMP_CUT):
+        os.remove(TMP_CUT)
 
 
 if __name__ == "__main__":
