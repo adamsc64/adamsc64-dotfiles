@@ -55,7 +55,6 @@ set_custom_prompt  # invokes function
 
 # Colorize ls and grep
 alias ls="ls -G"
-alias code="code -n"
 export LSCOLORS="FxFxCxDxBxegedabagacad"
 export GREP_OPTIONS='--color=auto'
 
