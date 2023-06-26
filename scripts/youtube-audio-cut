@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""
+Turns an audio clip in a Youtube URL into an mp3 file.
+
+Suggested installation of youtube-dl:
+    $ pip install --upgrade --force-reinstall "git+https://github.com/ytdl-org/youtube-dl.git
+"""
 
 import argparse
 import atexit
