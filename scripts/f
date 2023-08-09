@@ -4,7 +4,13 @@ set -Eeu -o pipefail
 # or just grepping index.txt if it exists.
 if [[ -f index.txt ]];
 then
-    cat index.txt | grep -i "$@"
+    # If you want to treat all the arguments as a single search
+    # pattern, you can use "$*" instead of "$@". This will
+    # concatenate all the arguments into a single string, with
+    # the first character of the internal field separator (IFS)
+    # variable between them. By default, the IFS is a space, so this
+    # will concatenate all the arguments with spaces in between.
+    cat index.txt | grep -i "$*"
 else
-    find . | grep -i "$@"
+    find . | grep -i "$*"
 fi
