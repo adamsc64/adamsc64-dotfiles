@@ -71,3 +71,9 @@ stty erase '^?'
 
 [ -f ".zshrc.local" ] && source ".zshrc.local"
 export PATH="/usr/local/sbin:$PATH"
+# if the script `github-copilot-cli` is in path
+if command -v github-copilot-cli &> /dev/null
+then
+    # alias the script `github-copilot-cli` to `copilot`
+    eval "$(github-copilot-cli alias -- "$0")"
+fi
