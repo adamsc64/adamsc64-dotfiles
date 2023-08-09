@@ -7,29 +7,53 @@ confirmation.
 Example usage:
 $ cd $(cdd mydirectory)  # will change to the output
 """
+import collections
 import sys
 import os
 
 
-def get_via_index():
-    index = "%s/index.txt" % os.getcwd()
+def get_index():
+    index = "%s/index.txt" % os.getenv("PWD")
     index = os.path.expanduser(index)
-    try:
-        return open(index)
-    except IOError:
-        return None
+    if not os.path.exists(index):
+        raise FileNotFoundError(index)
+    return index
+
+
+def get_via_index():
+    index = get_index()
+    with open(index) as f:
+        for path in f:
+            path = path.strip()
+            if os.path.isdir(path):
+                yield path
 
 
 def get_via_filesystem():
-    for dirpath, dirnames, filenames in os.walk('.'):
-        for dirname in dirnames:
-            yield os.path.join(os.getcwd(), dirpath, dirname)
+    for abspath in walk_dirs_bfs(os.getenv("PWD")):
+        yield abspath
+
+
+def walk_dirs_bfs(begin: str):
+    queue = collections.deque([begin])
+    while queue:
+        current = queue.popleft()
+        if os.path.isdir(current):
+            try:
+                queue.extend(
+                    os.path.join(current, filename) for filename in os.listdir(current)
+                )
+            except PermissionError:
+                pass
+            yield current
 
 
 def main(*args):
     args = " ".join(args)
-    dirlist = get_via_index()
-    if not dirlist:
+    try:
+        get_index()
+        dirlist = get_via_index()
+    except FileNotFoundError:
         dirlist = get_via_filesystem()
     for line in dirlist:
         line = line.strip()
@@ -39,6 +63,6 @@ def main(*args):
         break
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = sys.argv[1:]
     main(*args)
