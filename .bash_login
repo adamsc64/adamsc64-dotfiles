@@ -101,3 +101,10 @@ export PYTHONDONTWRITEBYTECODE=1
 source ~/.git-shortcuts
 source ~/.profile  # for local overrides
 
+[[ "$GITHUB_REPOSITORY" == github/* && "$CODESPACES" == true ]] && IS_WORK_CODESPACE=true
+[[ "$(hostname)" == "adamsc64-macbook-16" ]] && IS_WORK_LAPTOP=true
+[[ IS_WORK_CODESPACE == true || IS_WORK_HOSTNAME=true ]] && IS_WORK=true
+
+if [[ $IS_WORK == true ]]; then
+    git config --global user.email "adamsc64@github.com"
+fi

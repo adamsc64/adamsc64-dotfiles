@@ -2,6 +2,7 @@
 set -Eeu -o pipefail
 
 COMMON=(
+    .bash_login
     .git-shortcuts
     .gitconfig
     .gitignore_global
@@ -14,7 +15,6 @@ if [ -n "${CODESPACES+x}" ] && [ "$CODESPACES" == true ]; then
     )
 else
     DOTFILES=(
-        .bash_login
         .vimrc
         .zshenv
         .zshrc
