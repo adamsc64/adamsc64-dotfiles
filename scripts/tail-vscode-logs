@@ -1,0 +1,4 @@
+#!/bin/bash
+set -Eeu -o pipefail
+VSCODE_LOGS="${HOME}/Library/Application Support/Code/logs"
+find "${VSCODE_LOGS}" -type f -mtime -1d -print0 | xargs -0 tail -f

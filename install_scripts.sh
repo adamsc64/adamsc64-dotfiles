@@ -12,6 +12,7 @@ scripts=(
     img2say
     chrome-killall
     youtube-audio-cut
+    tail-vscode-logs
 )
 for script in "${scripts[@]}"
 do
