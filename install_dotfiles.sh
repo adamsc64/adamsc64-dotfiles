@@ -1,6 +1,10 @@
 #!/bin/bash
 set -Eeu -o pipefail
 
+if [ -n "${CODESPACES+x}" ] && [ "$CODESPACES" == true ]; then
+    exit 0
+fi
+
 dotfiles=(
     .vimrc
     .bash_login
