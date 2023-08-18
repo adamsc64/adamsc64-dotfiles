@@ -1,0 +1,4 @@
+# Some helpful git shortcuts
+alias gl='git log $(git merge-base HEAD $(gm))..HEAD'
+alias gd='git diff $(git merge-base HEAD $(gm)) HEAD'
+alias gr='git rebase -i $(git merge-base HEAD $(gm))'

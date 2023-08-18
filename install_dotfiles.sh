@@ -1,9 +1,11 @@
 #!/bin/bash
 set -Eeu -o pipefail
+
 dotfiles=(
     .vimrc
     .bash_login
     .psqlrc
+    .git-shortcuts
     .gitconfig
     .gitignore_global
     .zshenv
@@ -13,10 +15,15 @@ for dotfile in "${dotfiles[@]}"
 do
     srcpath="$PWD/$dotfile"
     destpath=~/$dotfile
-    if [[ ! -L "$destpath" ]]
+    if [[ -L "$destpath" ]]
     then
-        ln -s $srcpath $destpath
-    else
         echo "$destpath link already created"
+        continue
     fi
+    if [[ -e "$destpath" ]]
+    then
+        echo "$destpath already exists"
+        continue
+    fi
+    ln -s $srcpath $destpath
 done
