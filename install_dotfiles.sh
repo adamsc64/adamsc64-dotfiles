@@ -1,21 +1,28 @@
 #!/bin/bash
 set -Eeu -o pipefail
 
+COMMON=(
+    .git-shortcuts
+    .gitignore_global
+    .psqlrc
+)
+
 if [ -n "${CODESPACES+x}" ] && [ "$CODESPACES" == true ]; then
-    exit 0
+    DOTFILES=(
+        "${COMMON[@]}"
+    )
+else
+    DOTFILES=(
+        .bash_login
+        .gitconfig
+        .vimrc
+        .zshenv
+        .zshrc
+        "${COMMON[@]}"
+    )
 fi
 
-dotfiles=(
-    .vimrc
-    .bash_login
-    .psqlrc
-    .git-shortcuts
-    .gitconfig
-    .gitignore_global
-    .zshenv
-    .zshrc
-)
-for dotfile in "${dotfiles[@]}"
+for dotfile in "${DOTFILES[@]}"
 do
     srcpath="$PWD/$dotfile"
     destpath=~/$dotfile
@@ -29,5 +36,6 @@ do
         echo "$destpath already exists"
         continue
     fi
+    echo "Creating symlink for $dotfile: $srcpath -> $destpath"
     ln -s $srcpath $destpath
 done
