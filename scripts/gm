@@ -1,0 +1,14 @@
+#!/bin/bash
+CANDIDATES=(
+    "origin/main"
+    "upstream/main"
+    "origin/master"
+    "upstream/master"
+)
+
+for branch in "${CANDIDATES[@]}"; do
+  if [ "$(git branch -a --list $branch)" ]; then
+    echo -n "$branch"
+    exit 0
+  fi
+done

@@ -13,6 +13,7 @@ scripts=(
     chrome-killall
     youtube-audio-cut
     tail-vscode-logs
+    gm
 )
 for script in "${scripts[@]}"
 do
