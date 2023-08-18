@@ -1,6 +1,6 @@
 [user]
  name = Christopher Adams
- email = ![[ "$GITHUB_REPOSITORY" == github/* || "$(hostname)" == "adamsc64-macbook-16" ]] && echo adamsc64@github.com || echo christopher.r.adams@gmail.com
+ email = christopher.r.adams@gmail.com
 [core]
  excludesfile = ~/.gitignore_global
 [color]
