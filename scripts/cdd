@@ -7,8 +7,8 @@ confirmation.
 Example usage:
 $ cd $(cdd mydirectory)  # will change to the output
 """
+import argparse
 import collections
-import sys
 import os
 
 
@@ -48,21 +48,61 @@ def walk_dirs_bfs(begin: str):
             yield current
 
 
-def main(*args):
-    args = " ".join(args)
+def get_args():
+    parser = argparse.ArgumentParser(
+        description="Search for files in the current directory that end with a given suffix."
+    )
+    parser.add_argument("suffix", type=str, help="The suffix to search for.")
+    parser.add_argument(
+        "-n",
+        "--num-matches",
+        type=int,
+        default=1,
+        help="The maximum number of matches to print.",
+    )
+    parser.add_argument(
+        "-t",
+        "--type",
+        type=str,
+        choices=["d", "f", "*"],
+        default="*",
+        help="The type of file to search for (d = directory, f = file).",
+    )
+    parser.add_argument(
+        "-i",
+        "--insensitive",
+        action="store_true",
+        help="Whether to ignore case when searching.",
+    )
+    return parser.parse_args()
+
+
+def main():
+    suffix = args.suffix
     try:
         get_index()
         dirlist = get_via_index()
     except FileNotFoundError:
         dirlist = get_via_filesystem()
+    num_matches = 0
     for line in dirlist:
+        original_line = line
         line = line.strip()
-        if not line.endswith(args):
+        if args.insensitive:
+            line = line.lower()
+            suffix = suffix.lower()
+        if not line.endswith(suffix):
             continue
-        print(line)
-        break
+        if args.type == "d" and not os.path.isdir(line):
+            continue
+        elif args.type == "f" and not os.path.isfile(line):
+            continue
+        print(original_line)
+        num_matches += 1
+        if num_matches >= args.num_matches:
+            break
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    main(*args)
+    args = get_args()
+    main()
