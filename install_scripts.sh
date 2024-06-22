@@ -3,17 +3,18 @@ set -Eeu -o pipefail
 SCRIPTS_BASE=~/scripts
 mkdir -p $SCRIPTS_BASE
 scripts=(
-    f
-    update_indexes.sh
     cdd
-    trim
+    chrome-killall
+    f
+    gm
+    img2say
+    pbpaste-md
     random
     random_numbers.py
-    img2say
-    chrome-killall
-    youtube-audio-cut
     tail-vscode-logs
-    gm
+    trim
+    update_indexes.sh
+    youtube-audio-cut
 )
 for script in "${scripts[@]}"
 do

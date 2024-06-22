@@ -1,0 +1,18 @@
+#!/bin/bash
+if encoded=$(osascript -e 'try' -e 'the clipboard as «class HTML»' -e 'end try' \
+2>/dev/null); then
+    echo "$encoded" | \
+    perl -ne 'print chr foreach unpack("C*",pack("H*",substr($_,11,-3)))' | \
+    python -c "import sys; \
+               from bs4 import BeautifulSoup; \
+               html = sys.stdin.read(); \
+               soup = BeautifulSoup(html, 'lxml'); \
+               [tag.attrs.pop('style', None) for tag in \
+                soup.find_all(True)]; \
+               print(soup); \
+               " | \
+    python -m html2text -b 0
+else
+    pbpaste
+fi
+
