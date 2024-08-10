@@ -32,7 +32,7 @@ while IFS= read -r pair; do
     # Skip lines that are comments
     [[ "$pair" =~ ^#.*$ ]] && continue
     # Skip lines that don't have an email address in <> brackets
-    [[ ! "$pair" =~ .*<.*@.*>.* ]] && continue
+    [[ ! "$pair" =~ .*\<.*@.*\>.* ]] && continue
     # Set up the trailer
     COB="Co-authored-by: ${pair}"
     # Get the existing trailers from the commit message
