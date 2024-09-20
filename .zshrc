@@ -88,7 +88,10 @@ setopt HIST_FIND_NO_DUPS
 
 stty erase '^?'
 
+export BUILDKIT_PROGRESS=plain
+
 [ -f ".zshrc.local" ] && source ".zshrc.local"
+
 export PATH="/usr/local/sbin:$PATH"
 # if the script `github-copilot-cli` is in path
 if command -v github-copilot-cli &> /dev/null
