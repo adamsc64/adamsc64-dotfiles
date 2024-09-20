@@ -1,16 +1,35 @@
-# My .zshrc
+# .zshrc
+#
+# The .zshrc file is sourced whenever an interactive shell is started,
+# which includes most terminal sessions (but not when running scripts
+# or non-interactive processes). It is not sourced by default for
+# non-interactive shells like cron jobs or when running scripts
+# directly.
 #
 # Load order:
-# .zshenv
-#     always sourced, it often contains exported variables that should be
-#     available to other programs. For example, $PATH, $EDITOR, and $PAGER
-# .zprofile
-#     is basically the same as .zlogin except it's sourced before .zshrc
-# .zshrc
-#     interactive shell configuration
-# .zlogin
-#     sourced on the start of a login shell but after .zshrc if the shell is
-#     also interactive
+# 1. .zshenv
+#     Always sourced for every shell (login, interactive, and non-interactive).
+#     It often contains exported variables that should be available to other
+#     programs. For example, $PATH, $EDITOR, and $PAGER.
+#     Avoid interactive commands here.
+#
+# 2. .zprofile
+#     Sourced for login shells (not interactive shells).
+#     It's similar to .zlogin, but sourced before .zshrc.
+#     Typically used for login-specific environment settings.
+#
+# 3. .zshrc
+#     Sourced for interactive shells only.
+#     Contains interactive shell configuration, such as aliases, functions,
+#     shell options, prompt settings, and plugin managers.
+#
+# 4. .zlogin
+#     Sourced only for login shells (just like .zprofile), but after .zshrc if the
+#     shell is interactive and a login shell. Typically used for commands that
+#     should be run when logging in, like starting services or running a welcome message.
+#
+# .zlogout
+#     Sourced when logging out from a login shell.
 
 
 autoload -U colors && colors
