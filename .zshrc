@@ -35,11 +35,11 @@
 #     shell is interactive and a login shell. Typically used for commands that
 #     should be run when logging in, like starting services or running a welcome message.
 #
-# .zlogout
+# 5. .zlogout
 #     Sourced when logging out from a login shell.
 
 function set-prompt() {
-    setopt prompt_subst # allows for command substitution within $PS1
+    setopt prompt_subst  # allows for command substitution within $PS1
     setopt interactivecomments  # Ignores comments (i.e. '# ...') on commandline
 
     # Set the prompt
@@ -48,8 +48,8 @@ function set-prompt() {
     PS1="${PS1}%F{33}%D{%H:%M:%S} "
     PS1="${PS1}%F{magenta}★ "
     PS1="${PS1}%F{8}%m "
-    PS1="${PS1}%F{24}%~"
-    PS1="${PS1}%F{12}\$(git branch 2>/dev/null | grep '^*' | colrm 1 2 | sed 's/^[ ]*//' | sed 's/[ ]*$//' | sed 's/^/ \[/' | sed 's/$/\]/') "
+    PS1="${PS1}%F{24}%~ "
+    PS1="${PS1}%F{12}\$(git branch 2>/dev/null | grep '^*' | colrm 1 2 | sed 's/^/\[/' | sed 's/$/\] /')"
     PS1="${PS1}%F{8}%# %f"
 }
 

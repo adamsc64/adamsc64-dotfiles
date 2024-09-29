@@ -15,21 +15,22 @@ function set-paths() {
         export PATH="/opt/homebrew/sbin:$PATH"
     fi
     # Add user scripts and Go binaries to PATH
-    export PATH="${HOME}/scripts:${PATH}"
     export PATH="${HOME}/go/bin:${PATH}"
+    export PATH="${HOME}/scripts:${PATH}"
     # Prepend ~/bin to prioritize it in PATH
     export PATH="${HOME}/bin:${PATH}"  # Prepend first
 }
 
-function configure-openjdk() {
-    export PATH="$PATH:/usr/local/opt/openjdk/bin"  # Append last
-    export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openjdk/include"
-}
-
 set-paths
-configure-openjdk
 
 [ -f "$HOME/.zshenv.local" ] && source "$HOME/.zshenv.local"
 
 # Perhaps for .zshenv.local:
-#   alias adb=~/coding/android/platform-tools/adb
+#
+# alias adb=~/coding/android/platform-tools/adb
+#
+# function configure-openjdk() {
+#     export PATH="$PATH:/usr/local/opt/openjdk/bin"  # Append last
+#     export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openjdk/include"
+# }
+# configure-openjdk
