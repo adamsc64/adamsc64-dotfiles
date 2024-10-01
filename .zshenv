@@ -24,13 +24,3 @@ function set-paths() {
 set-paths
 
 [ -f "$HOME/.zshenv.local" ] && source "$HOME/.zshenv.local"
-
-# Perhaps for .zshenv.local:
-#
-# alias adb=~/coding/android/platform-tools/adb
-#
-# function configure-openjdk() {
-#     export PATH="$PATH:/usr/local/opt/openjdk/bin"  # Append last
-#     export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openjdk/include"
-# }
-# configure-openjdk
