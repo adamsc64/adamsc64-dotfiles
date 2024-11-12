@@ -88,7 +88,14 @@ function set-git-helpers() {
     # Git Helpers
     # -----------
     # ghl: give me a canonical link to a github entity
-    alias ghl="gh pr list -A $USERNAME --json url,title,number"
+    ghl() {
+        # Get all results from GitHub API via CLI
+        RESULTS=$(gh pr list -A adamsc64 --json url,title,number -sall)
+        # If no argument is provided, return all results
+        [ -z "$1" ] && { echo "${RESULTS}" | jq; return 0; }
+        # If an argument is provided, return the matched PR
+        echo "$RESULTS" | jq ".[] | select(.number == $1)"
+    }
     # gd: git diff from merge base
     alias gd='git diff $(git merge-base HEAD origin/$(gm)) HEAD'
     # gl: list of commits since merge base
