@@ -14,8 +14,8 @@
 [color "diff"]
  meta = yellow bold
  frag = magenta bold
- old = red
- new = cyan
+ old = brightred
+ new = brightgreen
 [color "status"]
  added = yellow
  changed = green
@@ -24,8 +24,10 @@
  default = simple
  autoSetupRemote = true
 [grep]
-	lineNumber = true
+ lineNumber = true
 [init]
-	defaultBranch = main
+ defaultBranch = main
 [credential]
-	helper = cache
+ helper = cache
+[include]
+ path = ~/.gitconfig_local
