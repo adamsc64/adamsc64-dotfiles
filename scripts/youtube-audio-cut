@@ -15,6 +15,15 @@ import shutil
 TMP_RAW_ORIGINAL = "/tmp/youtube-audio-cut-{}.original.mp3".format(os.getpid())
 TMP_CUT = "/tmp/youtube-audio-cut-{}.cut.mp3".format(os.getpid())
 
+def cleanup():
+    # Delete temporary files if they exist
+    if os.path.exists(TMP_RAW_ORIGINAL):
+        os.remove(TMP_RAW_ORIGINAL)
+
+    if os.path.exists(TMP_CUT):
+        os.remove(TMP_CUT)
+
+atexit.register(cleanup)
 
 def main():
     parser = argparse.ArgumentParser(description="Process YouTube audio.")
@@ -55,17 +64,6 @@ def main():
     destination = os.getcwd() + "/audio-capture-cut.mp3"
     shutil.move(TMP_CUT, destination)
     print(f"Audio file saved to {destination}")
-    cleanup()
-
-
-def cleanup():
-    # Delete temporary files if they exist
-    if os.path.exists(TMP_RAW_ORIGINAL):
-        os.remove(TMP_RAW_ORIGINAL)
-
-    if os.path.exists(TMP_CUT):
-        os.remove(TMP_CUT)
-
 
 if __name__ == "__main__":
     main()
