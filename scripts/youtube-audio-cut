@@ -2,8 +2,8 @@
 """
 Turns an audio clip in a Youtube URL into an mp3 file.
 
-Suggested installation of youtube-dl:
-    $ pip install --upgrade --force-reinstall "git+https://github.com/ytdl-org/youtube-dl.git
+Suggested installation of yt-dlp:
+    $ pip install yt-dlp
 """
 
 import argparse
@@ -26,7 +26,7 @@ def main():
 
     # Download the YouTube video as an audio file
     download_cmd = [
-        "youtube-dl",
+        "yt-dlp",
         "-o",
         TMP_RAW_ORIGINAL,
         "-x",
