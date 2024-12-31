@@ -14,7 +14,7 @@ scripts=(
     tail-vscode-logs
     trim
     update_indexes.sh
-    youtube-audio-cut.py
+    youtube_audio_cut.py
 )
 for script in "${scripts[@]}"
 do
