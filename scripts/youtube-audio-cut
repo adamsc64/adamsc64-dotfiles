@@ -5,15 +5,16 @@ Turns an audio clip in a Youtube URL into an mp3 file.
 Suggested installation of yt-dlp:
     $ pip install yt-dlp
 """
-
 import argparse
 import atexit
 import subprocess
 import os
 import shutil
 
+
 TMP_RAW_ORIGINAL = "/tmp/youtube-audio-cut-{}.original.mp3".format(os.getpid())
 TMP_CUT = "/tmp/youtube-audio-cut-{}.cut.mp3".format(os.getpid())
+
 
 def cleanup():
     # Delete temporary files if they exist
@@ -25,14 +26,31 @@ def cleanup():
 
 atexit.register(cleanup)
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Process YouTube audio.")
+    parser = argparse.ArgumentParser(description="Download and cut YouTube audio.")
     parser.add_argument("url", help="YouTube URL")
-    parser.add_argument("start_time", help="Start time in HH:MM:SS format")
-    parser.add_argument("end_time", help="End time in HH:MM:SS format")
+    parser.add_argument("-s", "--start_time", help="Start time in HH:MM:SS format", default=None)
+    parser.add_argument("-e", "--end_time", help="End time in HH:MM:SS format", default=None)
 
     args = parser.parse_args()
 
+    download_audio(args.url)
+
+    if args.start_time or args.end_time:
+        cut_audio(args.start_time, args.end_time)
+        # Move the audio file to the current directory
+        destination = os.getcwd() + "/audio-capture-cut.mp3"
+        shutil.move(TMP_CUT, destination)
+    else:
+        # Move the original audio file to the current directory
+        destination = os.getcwd() + "/audio-capture.mp3"
+        shutil.move(TMP_RAW_ORIGINAL, destination)
+
+    print(f"Audio file saved to {destination}")
+
+
+def download_audio(url):
     # Download the YouTube video as an audio file
     download_cmd = [
         "yt-dlp",
@@ -43,27 +61,21 @@ def main():
         "mp3",
         "--audio-quality",
         "0",  # highest
-        args.url,
+        url,
     ]
     subprocess.run(download_cmd, check=True)
 
+
+def cut_audio(start_time, end_time):
     # Use ffmpeg to cut the audio file
-    ffmpeg_cmd = [
-        "ffmpeg",
-        "-i",
-        TMP_RAW_ORIGINAL,
-        "-ss",
-        args.start_time,
-        "-to",
-        args.end_time,
-        TMP_CUT,
-    ]
+    ffmpeg_cmd = ["ffmpeg", "-i", TMP_RAW_ORIGINAL]
+    if start_time:
+        ffmpeg_cmd.extend(["-ss", start_time])
+    if end_time:
+        ffmpeg_cmd.extend(["-to", end_time])
+    ffmpeg_cmd.append(TMP_CUT)
     subprocess.run(ffmpeg_cmd, check=True)
 
-    # Move the audio file to the current directory
-    destination = os.getcwd() + "/audio-capture-cut.mp3"
-    shutil.move(TMP_CUT, destination)
-    print(f"Audio file saved to {destination}")
 
 if __name__ == "__main__":
     main()
