@@ -7,6 +7,7 @@ Suggested installation of yt-dlp:
 """
 import argparse
 import atexit
+import re
 import shutil
 import subprocess
 import os
@@ -31,7 +32,7 @@ atexit.register(cleanup)
 
 def main():
     parser = argparse.ArgumentParser(description="Download and cut YouTube audio.")
-    parser.add_argument("url", help="YouTube URL")
+    parser.add_argument("url", help="YouTube URL", type=validate_url)
     parser.add_argument("-s", "--start_time", help="Start time in HH:MM:SS format", default=None)
     parser.add_argument("-e", "--end_time", help="End time in HH:MM:SS format", default=None)
 
@@ -56,6 +57,16 @@ def main():
         shutil.move(TMP_RAW_ORIGINAL, destination)
 
     print(f"Audio file saved to {destination}")
+
+
+def validate_url(url):
+    # Simple regex to check if the URL is a valid YouTube URL
+    youtube_regex = re.compile(
+        r'^(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/.+$'
+    )
+    if not youtube_regex.match(url):
+        raise argparse.ArgumentTypeError(f"Invalid YouTube URL: {url}")
+    return url
 
 
 def passes_system_check():
