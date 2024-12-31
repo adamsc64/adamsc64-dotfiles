@@ -7,6 +7,7 @@ Suggested installation of yt-dlp:
 """
 import argparse
 import atexit
+import shutil
 import subprocess
 import os
 import shutil
@@ -14,6 +15,7 @@ import shutil
 
 TMP_RAW_ORIGINAL = "/tmp/youtube-audio-cut-{}.original.mp3".format(os.getpid())
 TMP_CUT = "/tmp/youtube-audio-cut-{}.cut.mp3".format(os.getpid())
+PREREQUISITES = ["yt-dlp", "ffmpeg"]
 
 
 def cleanup():
@@ -35,6 +37,12 @@ def main():
 
     args = parser.parse_args()
 
+    if not passes_system_check():
+        print("Please install the following prerequisites before running this script:")
+        for prereq in PREREQUISITES:
+            print(f"  - {prereq}")
+        exit(1)
+
     download_audio(args.url)
 
     if args.start_time or args.end_time:
@@ -48,6 +56,14 @@ def main():
         shutil.move(TMP_RAW_ORIGINAL, destination)
 
     print(f"Audio file saved to {destination}")
+
+
+def passes_system_check():
+    # Check if prerequisites are installed
+    for prereq in PREREQUISITES:
+        if shutil.which(prereq) is None:
+            return False
+    return True
 
 
 def download_audio(url):
