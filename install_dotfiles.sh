@@ -21,6 +21,7 @@ else
         .vimrc
         .zshenv
         .zshrc
+        .zprofile
         "${COMMON[@]}"
     )
 fi
