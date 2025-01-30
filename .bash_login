@@ -14,8 +14,6 @@
     export EC2_HOME=$HOME/.ec2/ec2-api-tools-1.4.3.0
     export PATH=$PATH:$EC2_HOME/bin
 
-source ~/.git-shortcuts
-
 [[ "$GITHUB_REPOSITORY" == github/* && "$CODESPACES" == true ]] && IS_WORK_CODESPACE=true
 [[ "$(hostname)" == "adamsc64-macbook-16" ]] && IS_WORK_LAPTOP=true
 [[ IS_WORK_CODESPACE == true || IS_WORK_HOSTNAME=true ]] && IS_WORK=true

@@ -88,3 +88,5 @@ export PATH="${HOME}/scripts:${PATH}"
 export PATH="${HOME}/bin:${PATH}"
 
 export PYTHONDONTWRITEBYTECODE=1
+
+source ~/.git-shortcuts
