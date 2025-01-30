@@ -3,7 +3,6 @@ set -Eeu -o pipefail
 
 COMMON=(
     .bashrc
-    .bash_login
     .git-shortcuts
     .gitconfig
     .gitignore_global
