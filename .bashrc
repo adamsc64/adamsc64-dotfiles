@@ -73,10 +73,12 @@ export HISTFILESIZE=1000000
 export HISTSIZE=1000000
 export HISTCONTROL=ignoreboth
 # Append to PROMPT_COMMAND while preserving existing commands
-if [[ -n "$PROMPT_COMMAND" ]]; then
-    export PROMPT_COMMAND="$PROMPT_COMMAND; history -a"
-else
-    export PROMPT_COMMAND="history -a"
+export PROMPT_COMMAND="history -a"
+# Codespaces persisted share directory
+CODESPACES_PERSISTED_SHARE="/workspaces/.codespaces/.persistedshare"
+# If the persisted share directory exists, use history file there.
+if [[ -d $CODESPACES_PERSISTED_SHARE ]]; then
+    export HISTFILE="$CODESPACES_PERSISTED_SHARE/.bash_history"
 fi
 
 # Set $PATH variable. #
