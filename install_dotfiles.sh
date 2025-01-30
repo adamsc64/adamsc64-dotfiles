@@ -2,6 +2,7 @@
 set -Eeu -o pipefail
 
 COMMON=(
+    .bashrc
     .bash_login
     .git-shortcuts
     .gitconfig
@@ -47,3 +48,9 @@ do
     echo "Creating symlink for $dotfile: $srcpath -> $destpath"
     ln -s $srcpath $destpath
 done
+
+if [ -n "${CODESPACES+x}" ] && [ "$CODESPACES" == true ]; then
+    # Special behavior for GitHub Codespaces needed because it already
+    # has a .bashrc file. Install customizations hook to .bashrc here.
+    echo "source '/workspaces/.codespaces/.persistedshare/dotfiles/.bashrc'" >> ~/.bashrc
+fi

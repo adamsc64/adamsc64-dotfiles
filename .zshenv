@@ -17,8 +17,7 @@ function set-paths() {
     # Add user scripts and Go binaries to PATH
     export PATH="${HOME}/go/bin:${PATH}"
     export PATH="${HOME}/scripts:${PATH}"
-    # Prepend ~/bin to prioritize it in PATH
-    export PATH="${HOME}/bin:${PATH}"  # Prepend first
+    export PATH="${HOME}/bin:${PATH}"
 }
 
 set-paths
