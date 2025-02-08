@@ -38,10 +38,9 @@ def main():
 
     args = parser.parse_args()
 
-    if not passes_system_check():
-        print("Please install the following prerequisites before running this script:")
-        for prereq in PREREQUISITES:
-            print(f"  - {prereq}")
+    failing_prereq = is_any_failing_prereq()
+    if failing_prereq:
+        print(f"Please install the following prerequisite before running this script: {failing_prereq}")
         exit(1)
 
     download_audio(args.url)
@@ -69,12 +68,12 @@ def validate_url(url):
     return url
 
 
-def passes_system_check():
+def is_any_failing_prereq():
     # Check if prerequisites are installed
     for prereq in PREREQUISITES:
         if shutil.which(prereq) is None:
-            return False
-    return True
+            return prereq
+    return None
 
 
 def download_audio(url):
