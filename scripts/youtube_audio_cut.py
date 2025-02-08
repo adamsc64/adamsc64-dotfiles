@@ -100,6 +100,8 @@ def cut_audio(start_time, end_time):
     if end_time:
         ffmpeg_cmd.extend(["-to", end_time])
     ffmpeg_cmd.append(TMP_CUT)
+    # Print the command to be run
+    print(f"Running command: {' '.join(ffmpeg_cmd)}")
     subprocess.run(ffmpeg_cmd, check=True)
 
 
