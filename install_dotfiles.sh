@@ -53,3 +53,9 @@ if [ -n "${CODESPACES+x}" ] && [ "$CODESPACES" == true ]; then
     # has a .bashrc file. Install customizations hook to .bashrc here.
     echo "source '/workspaces/.codespaces/.persistedshare/dotfiles/.bashrc'" >> ~/.bashrc
 fi
+
+# Download the color schemes
+mkdir -p ~/.vim/colors
+curl -s https://raw.githubusercontent.com/notpratheek/Pychimp-vim/master/pychimp.vim -o ~/.vim/colors/pychimp.vim
+curl -s http://www.vim.org/scripts/download_script.php?src_id=13400 -o ~/.vim/colors/wombat256mod.vim
+echo "Color schemes downloaded to ~/.vim/colors/"
