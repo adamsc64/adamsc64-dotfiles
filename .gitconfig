@@ -1,33 +1,78 @@
 [user]
  name = Christopher Adams
  email = christopher.r.adams@gmail.com
+
 [core]
  excludesfile = ~/.gitignore_global
+ fsmonitor = true  # the file system monitor tracks file system events instead of relying on stat calls
+ untrackedCache = true  # caches the list of untracked files in the repository
+
 [color]
  branch = auto
  diff = auto
  status = auto
+
 [color "branch"]
  current = yellow reverse
  local = yellow
  remote = green
+
 [color "diff"]
  meta = yellow bold
  frag = magenta bold
  old = brightred
  new = brightgreen
+
 [color "status"]
  added = yellow
  changed = green
  untracked = cyan
+
 [push]
- default = simple
- autoSetupRemote = true
+ default = simple  # Push current branch to the same name on the remote
+ autoSetupRemote = true  # Automatically create an upstream branch on push
+ followTags = true  # Push all tags to the remote at every push
+
 [grep]
- lineNumber = true
+ lineNumber = true  # Show line numbers in grep output
+
 [init]
- defaultBranch = main
+ defaultBranch = main  # Set default branch name to main
+
 [credential]
- helper = cache
+ helper = cache  # Cache credentials
+
+[column]
+ ui = auto  # Enable column mode for 'git branch' and others
+
+[branch]
+ sort = -committerdate  # Sort branches by committer date
+
+[tag]
+ sort = version:refname  # Sort tags correctly by semantic version number
+
+[diff]
+ algorithm = histogram  # the histogram algorithm is an incremental improvement on 'patience'. The default is 'myers'.
+ colorMoved = plain  # see a difference between moved code and added lines
+ mnemonicPrefix = true  # replaces a/ and b/ with i/ and w/ (index and working) in diff output
+ renames = true  # detect if a file has been renamed, which is generally good (if slightly more expensive)
+
+[help]
+ autocorrect = prompt  # Prompt for autocorrect
+
+[commit]
+ verbose = true  # Show verbose commit messages
+
+[rerere]
+ enabled = true  # Reuse recorded resolutions
+ autoupdate = true  # Auto-update recorded resolution
+
+[rebase]
+ autoSquash = true  # commits with messages like fixup! <commit> or squash! <commit> will be auto-set up for this on 'rebase -i'
+ updateRefs = true  # updates the references (e.g., branch pointers) after a successful rebase
+
+[merge]
+ conflictstyle = zdiff3  # zealous diff3 -- it adds a ||||||| block that shows you what the block looked like before either change.
+
 [include]
- path = ~/.gitconfig_local
+ path = ~/.gitconfig_local  # Include additional config file
