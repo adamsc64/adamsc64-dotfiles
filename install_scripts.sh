@@ -9,6 +9,7 @@ scripts=(
     gm
     img2say
     pbpaste-md.sh
+    prs
     random
     random_numbers.py
     tail-vscode-logs

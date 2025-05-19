@@ -1,0 +1,5 @@
+#!/bin/bash
+
+gh api "search/issues?q=is:pr+state:open+author:@me" \
+  --jq '.items[] | [.title, .html_url] | @tsv' \
+  | column -t -s $'\t'
