@@ -10,7 +10,7 @@ scripts=(
     img2say
     last-download.sh
     pbpaste-md.sh
-    prs
+    pulls
     random
     random_numbers.py
     tail-vscode-logs
