@@ -8,6 +8,7 @@ scripts=(
     f
     gm
     img2say
+    last-download.sh
     pbpaste-md.sh
     prs
     random
