@@ -18,7 +18,14 @@ def get_section(lines, section_number):
     section_start = -1
     section_end = -1
     for i, line in enumerate(lines):
+        if '<data:image' in line:
+            continue  # Never include lines with images
         stripped = line.strip()
+        # Check for the start of the footnotes, indicating the main
+        # text of the article has ended.
+        if stripped.startswith("[^1]:"):
+            section_end = i
+            break
         if not(stripped.startswith("**") and stripped.endswith("**")):
             continue
         content = stripped[2:-2].strip()
@@ -34,6 +41,8 @@ def get_section(lines, section_number):
                 break
             continue
         section_start = i
+    if section_end == -1:
+        section_end = len(lines)
     return lines[section_start:section_end] if section_start != -1 else []
 
 
