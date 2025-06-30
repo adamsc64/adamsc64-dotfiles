@@ -35,6 +35,7 @@ def main():
     parser.add_argument("url", help="YouTube URL", type=validate_url)
     parser.add_argument("-s", "--start_time", help="Start time in HH:MM:SS format", default=None)
     parser.add_argument("-e", "--end_time", help="End time in HH:MM:SS format", default=None)
+    parser.add_argument("-o", "--output", help="Output file path", default=None)
 
     args = parser.parse_args()
 
@@ -45,14 +46,14 @@ def main():
 
     download_audio(args.url)
 
+    destination = args.output or os.getcwd() + "/audio-capture.mp3"
+
     if args.start_time or args.end_time:
         cut_audio(args.start_time, args.end_time)
         # Move the audio file to the current directory
-        destination = os.getcwd() + "/audio-capture-cut.mp3"
         shutil.move(TMP_CUT, destination)
     else:
         # Move the original audio file to the current directory
-        destination = os.getcwd() + "/audio-capture.mp3"
         shutil.move(TMP_RAW_ORIGINAL, destination)
 
     print(f"Audio file saved to {destination}")
