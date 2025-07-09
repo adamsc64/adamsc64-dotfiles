@@ -42,8 +42,6 @@
 [credential]
  helper = cache  # Cache credentials
 
-[column]
- ui = auto  # Enable column mode for 'git branch' and others
 
 [branch]
  sort = -committerdate  # Sort branches by committer date
