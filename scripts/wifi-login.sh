@@ -2,24 +2,13 @@
 
 set -euo pipefail
 
-# 1Password shorthand account name
-OP_ACCOUNT="github"
-
-echo "Checking if ONEP_PASSWORD is set..."
-# Check if ONEP_PASSWORD is set
-if [[ -z "${ONEP_PASSWORD:-}" ]]; then
-  echo "ONEP_PASSWORD is not set"
+if [[ -z "${OWL_USERNAME:-}" || -z "${OWL_PASSWORD:-}" ]]; then
+  echo "Error: OWL_USERNAME and OWL_PASSWORD environment variables must be set."
   exit 1
 fi
 
-echo "Signing in to 1Password CLI..."
-# Sign in to 1Password CLI
-eval $(echo "$ONEP_PASSWORD" | op signin)
-
-echo "Fetching credentials from 1Password item 'OWL Oxford'..."
-# Fetch credentials from 1Password item titled "OWL Oxford"
-USERNAME=$(op item get "OWL Oxford" --field username)
-PASSWORD=$(op item get "OWL Oxford" --field password)
+USERNAME="${OWL_USERNAME}"
+PASSWORD="${OWL_PASSWORD}"
 
 # Login URL for the captive portal
 LOGIN_URL="https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
