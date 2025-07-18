@@ -23,7 +23,7 @@ fi
 
 echo "Checking if internet is already accessible..."
 # Check if internet is already accessible
-if curl -s --head --request GET https://www.google.com | grep -qE "HTTP/[0-9.]+ 200"; then
+if curl -s --head --request GET --max-time 2 https://www.google.com | grep -qE "HTTP/[0-9.]+ 200"; then
   echo "Internet is already accessible."
   exit 0
 fi
