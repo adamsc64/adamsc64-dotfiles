@@ -1,0 +1,4 @@
+#!/bin/bash
+# This is meant for `brew install sleepwatcher` to run
+BOSE_ID=$(blueutil --paired | grep "Bose QC45" | awk '{print $2}' | sed 's/,//')
+blueutil --connect $BOSE_ID

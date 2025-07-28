@@ -22,6 +22,8 @@ else
         .zshenv
         .zshrc
         .zprofile
+        .sleep
+        .wakeup
         "${COMMON[@]}"
     )
 fi
