@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+# This hook automatically adds Co-authored-by trailers to the commit
+# message if `.git/pairing` exists. The `.git/pairing` file should
+# contain a list of committers in the format:
+#  FirstName LastName <email@address.com>
+#
+# Lines in `.git/pairing` that start with `#` are ignored.
+# So you can use this to easily manage your pairing partners by
+# commenting out lines.
+#
+# To generate a pairing file quickly from the last 1000 commits in a
+# repo, you can use:
+#  $ git log -n 1000 --format='%aN <%aE>' | sort -u > .git/pairing
+#
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+SHA1="$3"
+PAIRSFILE=".git/pairing"
+
+# If PAIRSFILE does not exist, don't do anything
+[ ! -f "${PAIRSFILE}" ] && exit 0
+# If non-interactive, don't do anything
+[ ! -t 1 ] && exit 0
+# If an squash or merge commit, don't do anything
+[ "$COMMIT_SOURCE" = "squash" ] || [ "$COMMIT_SOURCE" = "merge" ] && exit 0
+
+# Read the PAIRSFILE and add the Co-authored-by trailers to the commit
+# message.
+while IFS= read -r pair; do
+    # Skip lines that are comments
+    [[ "$pair" =~ ^#.*$ ]] && continue
+    # Skip lines that don't have an email address in <> brackets
+    [[ ! "$pair" =~ .*\<.*@.*\>.* ]] && continue
+    # Set up the trailer
+    COB="Co-authored-by: ${pair}"
+    # Get the existing trailers from the commit message
+    existing_trailers=$(git interpret-trailers --parse "$COMMIT_MSG_FILE")
+    # If the trailer already exists, don't add it again
+    if echo "$existing_trailers" | grep -q "$COB"; then
+        continue
+    fi
+    # Add the trailer to the commit message
+    git interpret-trailers \
+        --in-place \
+        --trailer "$COB" \
+        "$COMMIT_MSG_FILE"
+done < "${PAIRSFILE}"
+
+# If the COMMIT_SOURCE is empty, it means that the commit is new.
+# Prepend a newline to allow the user to add the commit message before
+# the Co-authored-by trailers.
+if test -z "$COMMIT_SOURCE"
+then
+  sed -i.bak '1s/^/\n/' "$COMMIT_MSG_FILE"
+fi
