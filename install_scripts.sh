@@ -20,21 +20,20 @@ scripts=(
     trim
     # executable .py and .sh scripts will be added dynamically
 )
-echo "Finding and adding executable shell scripts..."
-shell_scripts=("$THIS_DIR"/scripts/*.sh)
-for file in "${shell_scripts[@]}"; do
-    if [[ -f "$file" && -x "$file" ]]; then
-        scripts+=("$(basename "$file")")
-    fi
-done
+add_executable_scripts() {
+    local ext=$1
+    echo "Finding and adding executable '.${ext}' scripts..."
+    local pattern="$THIS_DIR/scripts/*.$ext"
+    for file in $pattern; do
+        [[ -f "$file" && -x "$file" ]] || continue
+        local name
+        name=$(basename "$file")
+        scripts+=("$name")
+    done
+}
 
-echo "Finding and adding executable python scripts..."
-python_scripts=("$THIS_DIR"/scripts/*.py)
-for file in "${python_scripts[@]}"; do
-    if [[ -f "$file" && -x "$file" ]]; then
-        scripts+=("$(basename "$file")")
-    fi
-done
+add_executable_scripts sh
+add_executable_scripts py
 
 echo "Linking scripts..."
 for script in "${scripts[@]}"
