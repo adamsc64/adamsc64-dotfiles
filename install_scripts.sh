@@ -32,25 +32,25 @@ add_executable_scripts() {
     done
 }
 
+link_script() {
+    local script=$1
+    local srcpath="${THIS_DIR}/scripts/${script}"
+    local destpath="${SCRIPTS_BASE}/${script}"
+    if [[ ! -f "$srcpath" ]]; then
+        echo "Warning: Source file ${srcpath} does not exist, skipping"
+        return
+    fi
+    if [[ ! -L "$destpath" ]]; then
+        echo "Creating symlink from ${srcpath} to ${destpath}..."
+        ln -s "$srcpath" "$destpath"
+    fi
+}
+
 add_executable_scripts sh
 add_executable_scripts py
 
 echo "Linking scripts..."
-for script in "${scripts[@]}"
-do
-    # Define source and destination paths
-    srcpath="${THIS_DIR}/scripts/${script}"
-    destpath="${SCRIPTS_BASE}/${script}"
-    # Check if source file exists
-    if [[ ! -f "$srcpath" ]]
-    then
-        echo "Warning: Source file ${srcpath} does not exist, skipping"
-        continue
-    fi
-    # Create symlink if it doesn't already exist
-    if [[ ! -L "$destpath" ]]
-    then
-        ln -s "$srcpath" "$destpath"
-        echo "Symlink created from ${srcpath} to ${destpath}"
-    fi
+
+for script in "${scripts[@]}"; do
+    link_script "$script"
 done
