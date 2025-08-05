@@ -7,6 +7,7 @@ THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_BASE="$HOME/scripts"
 # Create the scripts directory if it doesn't exist
 mkdir -p "$SCRIPTS_BASE"
+
 # Array of specific scripts to install
 scripts=(
     cdd
@@ -20,6 +21,7 @@ scripts=(
     trim
     # executable .py and .sh scripts will be added dynamically
 )
+
 add_executable_scripts() {
     local ext=$1
     echo "Finding and adding executable '.${ext}' scripts..."
@@ -46,11 +48,15 @@ link_script() {
     fi
 }
 
-add_executable_scripts sh
-add_executable_scripts py
+main() {
+    add_executable_scripts sh
+    add_executable_scripts py
 
-echo "Linking scripts..."
+    echo "Linking scripts..."
 
-for script in "${scripts[@]}"; do
-    link_script "$script"
-done
+    for script in "${scripts[@]}"; do
+        link_script "$script"
+    done
+}
+
+main "$@"
