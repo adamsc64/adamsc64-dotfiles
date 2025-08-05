@@ -13,6 +13,15 @@ PASSWORD="${OWL_PASSWORD}"
 # Login URL for the captive portal
 LOGIN_URL="https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
 
+# helper to test internet access (returns 0 if reachable via HTTP 200)
+check_internet() {
+    local url=${1:-https://www.google.com}
+    if curl -Is --fail --max-time 2 "$url" >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
 echo "Checking current Wi-Fi network..."
 # Check that you're on the OWL Wi-Fi
 SSID=$(networksetup -getairportnetwork en0 | awk -F': ' '{print $2}')
@@ -23,7 +32,7 @@ fi
 
 echo "Checking if internet is already accessible..."
 # Check if internet is already accessible
-if curl -s --head --request GET --max-time 2 https://www.google.com | grep -qE "HTTP/[0-9.]+ 200"; then
+if check_internet; then
   echo "Internet is already accessible."
   exit 0
 fi
@@ -43,7 +52,7 @@ for attempt in $(seq 1 $max_attempts); do
       -d "redirurl=" \
       -d "zone=tawny_owl" \
       --max-time 10 >/dev/null; then
-    if curl -s --head --request GET --max-time 2 https://www.google.com | grep -qE "HTTP/[0-9.]+ 200"; then
+    if check_internet; then
       echo "Login succeeded and internet is reachable."
       login_success=true
       break

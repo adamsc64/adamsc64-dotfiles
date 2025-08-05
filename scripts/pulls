@@ -1,6 +1,46 @@
 #!/bin/bash
 
-gh api "search/issues?q=is:pr+state:open+author:@me" \
+state="open"
+org=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --open)
+      state="open"
+      shift
+      ;;
+    --closed)
+      state="closed"
+      shift
+      ;;
+    --all)
+      state="all"
+      shift
+      ;;
+    --org)
+      org="$2"
+      shift 2
+      ;;
+    *)
+      echo "Usage: $0 [--open|--closed|--all] [--org <organization>]"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "$state" == "all" ]]; then
+  state_query=""
+else
+  state_query="state:$state+"
+fi
+
+if [[ -n "$org" ]]; then
+  org_query="org:$org+"
+else
+  org_query="org:github+"
+fi
+
+gh api "search/issues?q=is:pr+${state_query}${org_query}author:@me&sort=updated&order=desc" \
   --jq '.items[] |
     [(.title + " #" + (.number|tostring)), .html_url]
     | @tsv' \
