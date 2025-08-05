@@ -20,21 +20,23 @@ scripts=(
     trim
     # executable .py and .sh scripts will be added dynamically
 )
-# Find and add all executable shell scripts
+echo "Finding and adding executable shell scripts..."
 shell_scripts=("$THIS_DIR"/scripts/*.sh)
 for file in "${shell_scripts[@]}"; do
     if [[ -f "$file" && -x "$file" ]]; then
         scripts+=("$(basename "$file")")
     fi
 done
-# Find and add all executable Python scripts
+
+echo "Finding and adding executable python scripts..."
 python_scripts=("$THIS_DIR"/scripts/*.py)
 for file in "${python_scripts[@]}"; do
     if [[ -f "$file" && -x "$file" ]]; then
         scripts+=("$(basename "$file")")
     fi
 done
-# Loop through each script in the array
+
+echo "Linking scripts..."
 for script in "${scripts[@]}"
 do
     # Define source and destination paths
@@ -51,7 +53,5 @@ do
     then
         ln -s "$srcpath" "$destpath"
         echo "Symlink created from ${srcpath} to ${destpath}"
-    else
-        echo "${destpath} link already created"
     fi
 done

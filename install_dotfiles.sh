@@ -36,7 +36,6 @@ do
     # Check if the destination path is already a symlink
     if [[ -L "$destpath" ]]
     then
-        echo "$destpath link already created"
         continue
     fi
     # Check if a file (non-symlink) already exists at the destination
@@ -56,8 +55,9 @@ if [ -n "${CODESPACES+x}" ] && [ "$CODESPACES" == true ]; then
     echo "source '/workspaces/.codespaces/.persistedshare/dotfiles/.bashrc'" >> ~/.bashrc
 fi
 
-# Download the color schemes
+# Notify before downloading the color schemes
 mkdir -p ~/.vim/colors
+echo "pychimp.vim is downloading to ~/.vim/colors/pychimp.vim..."
 curl -s https://raw.githubusercontent.com/notpratheek/Pychimp-vim/master/pychimp.vim -o ~/.vim/colors/pychimp.vim
+echo "wombat256mod.vim is downloading to ~/.vim/colors/wombat256mod.vim..."
 curl -s http://www.vim.org/scripts/download_script.php?src_id=13400 -o ~/.vim/colors/wombat256mod.vim
-echo "Color schemes downloaded to ~/.vim/colors/"
