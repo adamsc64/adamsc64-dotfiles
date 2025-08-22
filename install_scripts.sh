@@ -44,6 +44,7 @@ link_script() {
     local script=$1
     local srcpath="${THIS_DIR}/scripts/${script}"
     local destpath="${SCRIPTS_BASE}/${script}"
+
     if [[ ! -f "$srcpath" ]]; then
         echo "Warning: Source file ${srcpath} does not exist, skipping"
         return
@@ -55,6 +56,7 @@ link_script() {
 }
 
 ensure_python_env() {
+    echo "Ensuring Python environment at $PYTHON_ENV_PATH..."
     if [[ ! -d "$PYTHON_ENV_PATH" ]]; then
         echo "Creating Python virtual environment at $PYTHON_ENV_PATH..."
         mkdir -p "$PYTHON_ENV_BASE"
@@ -93,9 +95,7 @@ main() {
     ensure_python_env
     add_executable_scripts py
     add_executable_scripts sh
-
-    echo "Linking scripts..."
-
+    echo "Linking and wrapping scripts..."
     for script in "${scripts[@]}"; do
         link_script "$script"
         wrap_script "$script"
