@@ -1,6 +1,12 @@
 #!/bin/bash
 # Script to install/symlink custom scripts to ~/scripts directory
 set -Eeu -o pipefail
+
+# Python virtual environment
+PYTHON_ENV_BASE="$HOME/.venvs"
+PYTHON_ENV_PATH="$PYTHON_ENV_BASE/env3"
+PYTHON_PACKAGES="beautifulsoup4 ipdb requests urllib3"
+
 # Get the directory where this script is located
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Define the destination directory for scripts
@@ -48,6 +54,18 @@ link_script() {
     fi
 }
 
+ensure_python_env() {
+    if [[ ! -d "$PYTHON_ENV_PATH" ]]; then
+        echo "Creating Python virtual environment at $PYTHON_ENV_PATH..."
+        mkdir -p "$PYTHON_ENV_BASE"
+        python3 -m venv "$PYTHON_ENV_PATH"
+        source "$PYTHON_ENV_PATH/bin/activate"
+        pip install $PYTHON_PACKAGES
+        deactivate
+        echo "Virtual environment created at $PYTHON_ENV_PATH"
+    fi
+}
+
 wrap_script() {
     local script=$1
     local srcpath="${THIS_DIR}/scripts/${script}"
@@ -64,7 +82,7 @@ wrap_script() {
         echo "Creating wrapper ${wrapper_name} for ${script}..."
         cat > "$destpath" << EOF
 #!/bin/bash
-source ~/.venvs/env3/bin/activate
+source ${PYTHON_ENV_PATH}/bin/activate
 exec "${srcpath}" "\$@"
 EOF
         chmod +x "$destpath"
@@ -72,6 +90,7 @@ EOF
 }
 
 main() {
+    ensure_python_env
     add_executable_scripts py
     add_executable_scripts sh
 
