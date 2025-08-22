@@ -48,14 +48,38 @@ link_script() {
     fi
 }
 
+wrap_script() {
+    local script=$1
+    local srcpath="${THIS_DIR}/scripts/${script}"
+    local wrapper_name="${script%.*}"  # Remove extension
+    wrapper_name="${wrapper_name//_/-}"  # Replace underscores with dashes
+    local destpath="${SCRIPTS_BASE}/${wrapper_name}"
+
+    if [[ ! -f "$srcpath" ]]; then
+        echo "Warning: Source file ${srcpath} does not exist, skipping"
+        return
+    fi
+
+    if [[ ! -f "$destpath" ]]; then
+        echo "Creating wrapper ${wrapper_name} for ${script}..."
+        cat > "$destpath" << EOF
+#!/bin/bash
+source ~/.venvs/env3/bin/activate
+exec "${srcpath}" "\$@"
+EOF
+        chmod +x "$destpath"
+    fi
+}
+
 main() {
-    add_executable_scripts sh
     add_executable_scripts py
+    add_executable_scripts sh
 
     echo "Linking scripts..."
 
     for script in "${scripts[@]}"; do
         link_script "$script"
+        wrap_script "$script"
     done
 }
 
