@@ -1,4 +1,4 @@
-#!/Users/chris/virtualenvs/env3/bin/python
+#!/usr/bin/env python
 """
 Script to speak text from stdin or from filenames given as arguments.
 
