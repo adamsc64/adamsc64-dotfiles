@@ -32,7 +32,7 @@ def get_mp3_path() -> str:
 
 # Playback range
 Start = TimeStamp(seconds=9)
-End = TimeStamp(seconds=115)
+End = TimeStamp(seconds=120)
 
 
 def main():
