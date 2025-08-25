@@ -85,7 +85,7 @@ wrap_script() {
         cat > "$destpath" << EOF
 #!/bin/bash
 source ${PYTHON_ENV_PATH}/bin/activate
-exec "${srcpath}" "\$@"
+python "${srcpath}" "\$@"
 EOF
         chmod +x "$destpath"
     fi
