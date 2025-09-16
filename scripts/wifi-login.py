@@ -53,7 +53,8 @@ def login_bodleian_portal(username, password, max_attempts=5, base_delay=2):
     session = requests.Session()
 
     for attempt in range(1, max_attempts + 1):
-        if make_attempt(session):
+        print(f"Bodleian login attempt {attempt} of {max_attempts}...")
+        if make_attempt(session, username, password):
             return True
 
         if attempt < max_attempts:
@@ -63,7 +64,6 @@ def login_bodleian_portal(username, password, max_attempts=5, base_delay=2):
 
 
 def make_attempt(session, username, password):
-    print(f"Bodleian login attempt {attempt} of {max_attempts}...")
     # Step 1: Make request to generate_204 to get redirect
     print("Making initial request to detect captive portal...")
     resp = session.get(BOD_CHECK_URL, timeout=10, allow_redirects=False)
