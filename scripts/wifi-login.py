@@ -51,15 +51,15 @@ def check_internet(url=CHECK_URL, timeout=2):
 def login_bodleian_portal(username, password, max_attempts=5, base_delay=2):
     """Login to Bodleian Reader WiFi network"""
     session = requests.Session()
-
     for attempt in range(1, max_attempts + 1):
         print(f"Bodleian login attempt {attempt} of {max_attempts}...")
-        if make_attempt(session, username, password):
-            return True
-
+        try:
+            if make_attempt(session, username, password):
+                return True
+        except ConnectionError:
+            print("Connection error during attempt.")
         if attempt < max_attempts:
             time.sleep(base_delay * attempt)
-
     return False
 
 
