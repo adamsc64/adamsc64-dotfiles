@@ -181,12 +181,6 @@ def login_to_bodleian():
     """Handle login for Bodleian Libraries network"""
     if not (BOD_USERNAME and BOD_PASSWORD):
         fail("BOD_USERNAME and BOD_PASSWORD environment variables must be set.")
-
-    print("Checking if internet is already accessible...")
-    if check_internet():
-        print("Internet is already accessible.")
-        return
-
     print("Attempting to log in to the Bodleian captive portal...")
     if not login_bodleian_portal(BOD_USERNAME, BOD_PASSWORD):
         fail("Failed to log in to Bodleian portal after attempts.")
@@ -194,23 +188,31 @@ def login_to_bodleian():
 
 
 def main():
+    print("Checking if internet is already accessible...")
+    if check_internet():
+        print("Internet is already accessible.")
+        return
+
     print("Checking current Wi-Fi network...")
     ssid = get_ssid()
+    if not ssid:
+        print("No network seems available.")
+        return
 
     # Network handler mapping
-    network_handlers = {
+    networks = {
         OWL_NETWORK: login_to_owl,
         BODLEIAN_NETWORK: login_to_bodleian,
     }
 
-    if ssid in network_handlers:
-        network_handlers[ssid]()
-    else:
-        supported_networks = ", ".join(network_handlers.keys())
+    handler = networks.get(ssid)
+    if not handler:
+        supported = ", ".join(networks.keys())
         print(
-            f"Not on a supported network (current: '{ssid}'). Supported: {supported_networks}"
+            f"Not on a supported network (current: '{ssid}'). Supported: {supported}"
         )
         return
+    handler()
 
 
 if __name__ == "__main__":
