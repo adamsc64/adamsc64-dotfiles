@@ -6,6 +6,8 @@ import subprocess
 import requests
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
+import urllib3
+
 
 LOGIN_URL = "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
 CHECK_URL = "https://www.google.com"
@@ -135,16 +137,16 @@ def login_captive_portal(username, password, max_attempts=5, base_delay=2):
     for attempt in range(1, max_attempts + 1):
         print(f"Login attempt {attempt} of {max_attempts}...")
         try:
-            resp = session.post(
+            _ = session.post(
                 LOGIN_URL,
                 data={
                     "auth_user": username,
                     "auth_pass": password,
                     "accept": "Continue",
-                    "redirurl": "",
+                    "redirurl": "http://www.gstatic.com/generate_204",
                     "zone": "tawny_owl",
                 },
-                timeout=10,
+                timeout=5,
                 verify=False,  # mirrors -k
             )
         except requests.RequestException:
@@ -165,11 +167,6 @@ def login_to_owl():
     if not (OWL_USERNAME and OWL_PASSWORD):
         fail("OWL_USERNAME and OWL_PASSWORD environment variables must be set.")
 
-    print("Checking if internet is already accessible...")
-    if check_internet():
-        print("Internet is already accessible.")
-        return
-
     print("Attempting to log in to the OWL captive portal...")
     success = login_captive_portal(OWL_USERNAME, OWL_PASSWORD)
     if not success:
@@ -187,7 +184,13 @@ def login_to_bodleian():
     print("Bodleian login attempt complete.")
 
 
+def disable_ssl_warnings():
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
 def main():
+    disable_ssl_warnings()
+
     print("Checking if internet is already accessible...")
     if check_internet():
         print("Internet is already accessible.")
