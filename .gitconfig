@@ -55,9 +55,6 @@
  mnemonicPrefix = true  # replaces a/ and b/ with i/ and w/ (index and working) in diff output
  renames = true  # detect if a file has been renamed, which is generally good (if slightly more expensive)
 
-[help]
- autocorrect = prompt  # Prompt for autocorrect
-
 [commit]
  verbose = true  # Show verbose commit messages
 
