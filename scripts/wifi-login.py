@@ -41,7 +41,7 @@ def get_ssid():
         return ""
 
 
-def check_internet(url=CHECK_URL, timeout=2):
+def check_internet(url=CHECK_URL, timeout=1):
     try:
         # HEAD request with status check
         resp = requests.head(url, timeout=timeout, allow_redirects=True)
@@ -137,7 +137,7 @@ def login_captive_portal(username, password, max_attempts=5, base_delay=2):
     for attempt in range(1, max_attempts + 1):
         print(f"Login attempt {attempt} of {max_attempts}...")
         try:
-            _ = session.post(
+            resp = session.post(
                 LOGIN_URL,
                 data={
                     "auth_user": username,
@@ -149,7 +149,7 @@ def login_captive_portal(username, password, max_attempts=5, base_delay=2):
                 timeout=5,
                 verify=False,  # mirrors -k
             )
-        except requests.RequestException:
+        except requests.RequestException as exc:
             print("Login POST failed or timed out.")
         else:
             if check_internet():
@@ -157,6 +157,7 @@ def login_captive_portal(username, password, max_attempts=5, base_delay=2):
                 return True
             else:
                 print("Login POST succeeded but internet not reachable.")
+                print(f"Is username {username} still right?")
         if attempt < max_attempts:
             time.sleep(base_delay * attempt)
     return False
