@@ -10,8 +10,8 @@ import urllib3
 
 
 LOGIN_URL = "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
-CHECK_URL = "https://www.google.com"
-BOD_CHECK_URL = "http://www.gstatic.com/generate_204"
+NEVERSSL = "http://neverssl.com/"
+GSTATIC_204 = "http://www.gstatic.com/generate_204"
 
 OWL_USERNAME = os.getenv("OWL_USERNAME")
 OWL_PASSWORD = os.getenv("OWL_PASSWORD")
@@ -41,11 +41,11 @@ def get_ssid():
         return ""
 
 
-def check_internet(url=CHECK_URL, timeout=1):
+# Confirm that we have actual internet access
+def check_internet(url=NEVERSSL, timeout=3):
     try:
-        # HEAD request with status check
-        resp = requests.head(url, timeout=timeout, allow_redirects=True)
-        return resp.status_code >= 200 and resp.status_code < 300
+        resp = requests.get(url, timeout=timeout, allow_redirects=False)
+        return resp.status_code == 200
     except requests.RequestException:
         return False
 
@@ -68,7 +68,7 @@ def login_bodleian_portal(username, password, max_attempts=5, base_delay=2):
 def make_attempt(session, username, password):
     # Step 1: Make request to generate_204 to get redirect
     print("Making initial request to detect captive portal...")
-    resp = session.get(BOD_CHECK_URL, timeout=10, allow_redirects=False)
+    resp = session.get(GSTATIC_204, timeout=10, allow_redirects=False)
 
     if resp.status_code != 200:
         print("Initial request failed")
