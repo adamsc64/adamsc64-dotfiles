@@ -45,6 +45,10 @@ def get_ssid():
 def check_internet(url=NEVERSSL, timeout=3):
     try:
         resp = requests.get(url, timeout=timeout, allow_redirects=False)
+        # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
+        # So we check for actual content.
+        if 'NeverSSL' in resp.text:
+            return True
         return resp.status_code == 200
     except requests.RequestException:
         return False
@@ -123,13 +127,15 @@ def make_attempt(session, username, password):
         submit_url = action
 
     resp = session.post(submit_url, data=form_data, timeout=10)
+    print("Form submitted, waiting to verify internet access...")
+    time.sleep(5)
 
     # Step 5: Check if login succeeded
     if check_internet():
         print("Bodleian login succeeded and internet is reachable.")
         return True
-    else:
-        print("Form submitted but internet not reachable yet.")
+    print("Form submitted but internet not reachable yet.")
+    return False
 
 
 def login_captive_portal(username, password, max_attempts=5, base_delay=2):
