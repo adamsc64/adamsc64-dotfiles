@@ -17,10 +17,12 @@ OWL_USERNAME = os.getenv("OWL_USERNAME")
 OWL_PASSWORD = os.getenv("OWL_PASSWORD")
 BOD_USERNAME = os.getenv("BOD_USERNAME")
 BOD_PASSWORD = os.getenv("BOD_PASSWORD")
+HARVARD_ACCESS_CODE = os.getenv("HARVARD_ACCESS_CODE")
 
 # Network constants
 OWL_NETWORK = "OWL"
 BODLEIAN_NETWORK = "Bodleian-Libraries"
+HARVARD_NETWORK = "Harvard Club"
 
 
 def fail(msg, code=1):
@@ -191,6 +193,71 @@ def login_to_bodleian():
     print("Bodleian login attempt complete.")
 
 
+def login_to_harvard():
+    """Handle login for Harvard Club network using SkyAdmin portal"""
+    if not HARVARD_ACCESS_CODE:
+        fail("HARVARD_ACCESS_CODE environment variable must be set.")
+
+    print("Attempting to log in to the Harvard Club captive portal...")
+
+    # The payload from the curl request
+    payload = {
+        "nseid": "0a1000",
+        "property_id": 5175,
+        "gateway_slug": None,
+        "location_index": None,
+        "ppli": None,
+        "vlan_id": 10353,
+        "mac_address": "603E5F34CE6B",  # This might need to be dynamic
+        "ip_address": "172.20.3.74",   # This might need to be dynamic
+        "registration_method_id": 4,
+        "access_code": HARVARD_ACCESS_CODE
+    }
+
+    headers = {
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/json;charset=UTF-8',
+        'Origin': 'https://splash.skyadmin.io',
+        'Referer': 'https://splash.skyadmin.io/',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+        'api-token': 'n0faQedrepaqusu2uzur1chisijuqAxe',
+        'sec-ch-ua': '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"'
+    }
+
+    try:
+        response = requests.post(
+            'https://skyadmin.io/api/portalregistrations',
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            print("Harvard Club portal registration successful.")
+            # Wait a moment then check internet
+            time.sleep(3)
+            if check_internet():
+                print("Harvard Club login succeeded and internet is reachable.")
+                return True
+            else:
+                print("Registration succeeded but internet not reachable yet.")
+        else:
+            print(f"Harvard Club portal registration failed: {response.status_code}")
+            print(f"Response: {response.text}")
+
+    except requests.RequestException as exc:
+        print(f"Harvard Club login failed: {exc}")
+
+    return False
+
+
 def disable_ssl_warnings():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -213,6 +280,7 @@ def main():
     networks = {
         OWL_NETWORK: login_to_owl,
         BODLEIAN_NETWORK: login_to_bodleian,
+        HARVARD_NETWORK: login_to_harvard,
     }
 
     handler = networks.get(ssid)
