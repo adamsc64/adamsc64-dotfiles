@@ -49,7 +49,7 @@ def check_internet(url=NEVERSSL, timeout=3):
         resp = requests.get(url, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
         # So we check for actual content.
-        if 'NeverSSL' in resp.text:
+        if "NeverSSL" in resp.text:
             return True
         return resp.status_code == 200
     except requests.RequestException:
@@ -209,34 +209,34 @@ def login_to_harvard():
         "ppli": None,
         "vlan_id": 10353,
         "mac_address": "603E5F34CE6B",  # This might need to be dynamic
-        "ip_address": "172.20.3.74",   # This might need to be dynamic
+        "ip_address": "172.20.3.74",  # This might need to be dynamic
         "registration_method_id": 4,
-        "access_code": HARVARD_ACCESS_CODE
+        "access_code": HARVARD_ACCESS_CODE,
     }
 
     headers = {
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Connection': 'keep-alive',
-        'Content-Type': 'application/json;charset=UTF-8',
-        'Origin': 'https://splash.skyadmin.io',
-        'Referer': 'https://splash.skyadmin.io/',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-site',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-        'api-token': 'n0faQedrepaqusu2uzur1chisijuqAxe',
-        'sec-ch-ua': '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"macOS"'
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Connection": "keep-alive",
+        "Content-Type": "application/json;charset=UTF-8",
+        "Origin": "https://splash.skyadmin.io",
+        "Referer": "https://splash.skyadmin.io/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+        "api-token": "n0faQedrepaqusu2uzur1chisijuqAxe",
+        "sec-ch-ua": '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"macOS"',
     }
 
     try:
         response = requests.post(
-            'https://skyadmin.io/api/portalregistrations',
+            "https://skyadmin.io/api/portalregistrations",
             json=payload,
             headers=headers,
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -286,9 +286,7 @@ def main():
     handler = networks.get(ssid)
     if not handler:
         supported = ", ".join(networks.keys())
-        print(
-            f"Not on a supported network (current: '{ssid}'). Supported: {supported}"
-        )
+        print(f"Not on a supported network (current: '{ssid}'). Supported: {supported}")
         return
     handler()
 
