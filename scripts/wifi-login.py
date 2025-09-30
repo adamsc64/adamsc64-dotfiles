@@ -89,18 +89,15 @@ def check_internet(url=NEVERSSL, timeout=3):
         return False
 
 
-def login_bodleian_portal(username, password, max_attempts=5, base_delay=2):
+def login_bodleian_portal(username, password):
     """Login to Bodleian Reader WiFi network"""
     session = requests.Session()
-    for attempt in range(1, max_attempts + 1):
-        print(f"Bodleian login attempt {attempt} of {max_attempts}...")
-        try:
-            if make_attempt(session, username, password):
-                return True
-        except ConnectionError:
-            print("Connection error during attempt.")
-        if attempt < max_attempts:
-            time.sleep(base_delay * attempt)
+    print(f"Bodleian login attempt...")
+    try:
+        if make_attempt(session, username, password):
+            return True
+    except ConnectionError:
+        print("Connection error during attempt.")
     return False
 
 
@@ -173,34 +170,31 @@ def make_attempt(session, username, password):
     return False
 
 
-def login_captive_portal(username, password, max_attempts=5, base_delay=2):
+def login_captive_portal(username, password):
     session = requests.Session()
-    for attempt in range(1, max_attempts + 1):
-        print(f"Login attempt {attempt} of {max_attempts}...")
-        try:
-            resp = session.post(
-                LOGIN_URL,
-                data={
-                    "auth_user": username,
-                    "auth_pass": password,
-                    "accept": "Continue",
-                    "redirurl": "http://www.gstatic.com/generate_204",
-                    "zone": "tawny_owl",
-                },
-                timeout=5,
-                verify=False,  # mirrors -k
-            )
-        except requests.RequestException as exc:
-            print("Login POST failed or timed out.")
-        else:
-            if check_internet():
-                print("Login succeeded and internet is reachable.")
-                return True
-            else:
-                print("Login POST succeeded but internet not reachable.")
-                print(f"Is username {username} still right?")
-        if attempt < max_attempts:
-            time.sleep(base_delay * attempt)
+    print(f"Login attempt...")
+    try:
+        resp = session.post(
+            LOGIN_URL,
+            data={
+                "auth_user": username,
+                "auth_pass": password,
+                "accept": "Continue",
+                "redirurl": "http://www.gstatic.com/generate_204",
+                "zone": "tawny_owl",
+            },
+            timeout=5,
+            verify=False,  # mirrors -k
+        )
+    except requests.RequestException as exc:
+        print("Login POST failed or timed out.")
+        return False
+    if check_internet():
+        print("Login succeeded and internet is reachable.")
+        return True
+    else:
+        print("Login POST succeeded but internet not reachable.")
+        print(f"Is username {username} still right?")
     return False
 
 
@@ -289,6 +283,7 @@ def login_to_harvard():
             print("Harvard Club portal registration successful.")
             # Wait a moment then check internet
             time.sleep(3)
+            print("Checking internet...")
             if check_internet():
                 print("Harvard Club login succeeded and internet is reachable.")
                 return True
@@ -334,7 +329,11 @@ def main():
         supported = ", ".join(networks.keys())
         print(f"Not on a supported network (current: '{ssid}'). Supported: {supported}")
         return
-    handler()
+    while True:
+        print(f"Attempting to log into network: {ssid}")
+        if handler():
+            break
+        time.sleep(2)
 
 
 if __name__ == "__main__":
