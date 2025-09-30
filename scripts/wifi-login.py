@@ -7,6 +7,7 @@ import requests
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 import urllib3
+from abc import ABC, abstractmethod
 
 
 LOGIN_URL = "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
@@ -25,6 +26,135 @@ BODLEIAN_NETWORK = "Bodleian-Libraries"
 HARVARD_NETWORK = "Harvard Club"
 
 
+class WiFiNetwork(ABC):
+    @abstractmethod
+    def get_credentials(self) -> tuple:
+        """Return (username, password) or equivalent credentials"""
+        pass
+
+    @abstractmethod
+    def login(self) -> bool:
+        """Perform network-specific login. Return True if successful."""
+        pass
+
+
+class Owl(WiFiNetwork):
+    def get_credentials(self):
+        if not (OWL_USERNAME and OWL_PASSWORD):
+            fail("OWL_USERNAME and OWL_PASSWORD environment variables must be set.")
+        return OWL_USERNAME, OWL_PASSWORD
+
+    def login(self):
+        """Handle login for OWL network"""
+        username, password = self.get_credentials()
+        print("Attempting to log in to the OWL captive portal...")
+        success = login_captive_portal(username, password)
+        if success:
+            print("OWL login attempt complete.")
+        return success
+
+
+class Bodleian(WiFiNetwork):
+    def get_credentials(self):
+        if not (BOD_USERNAME and BOD_PASSWORD):
+            fail("BOD_USERNAME and BOD_PASSWORD environment variables must be set.")
+        return BOD_USERNAME, BOD_PASSWORD
+
+    def login(self):
+        """Handle login for Bodleian Libraries network"""
+        username, password = self.get_credentials()
+        print("Attempting to log in to the Bodleian captive portal...")
+        if not login_bodleian_portal(username, password):
+            fail("Failed to log in to Bodleian portal after attempts.")
+        print("Bodleian login attempt complete.")
+
+
+class Harvard(WiFiNetwork):
+    def get_credentials(self):
+        if not HARVARD_ACCESS_CODE:
+            fail("HARVARD_ACCESS_CODE environment variable must be set.")
+        return (HARVARD_ACCESS_CODE,)
+
+    def login(self):
+        """Handle login for Harvard Club network using SkyAdmin portal"""
+        (access_code,) = self.get_credentials()
+
+        print("Attempting to log in to the Harvard Club captive portal...")
+
+        # Get dynamic network information
+        mac_address = get_mac_address()
+        ip_address = get_ip_address()
+
+        if not mac_address:
+            fail("Could not determine MAC address for network interface")
+
+        if not ip_address:
+            fail("Could not determine IP address for network interface")
+
+        print(f"Using MAC address: {mac_address}")
+        print(f"Using IP address: {ip_address}")
+
+        # The payload from the curl request
+        payload = {
+            "nseid": "0a1000",
+            "property_id": 5175,
+            "gateway_slug": None,
+            "location_index": None,
+            "ppli": None,
+            "vlan_id": 10353,
+            "mac_address": mac_address,
+            "ip_address": ip_address,
+            "registration_method_id": 4,
+            "access_code": access_code,
+        }
+
+        headers = {
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Connection": "keep-alive",
+            "Content-Type": "application/json;charset=UTF-8",
+            "Origin": "https://splash.skyadmin.io",
+            "Referer": "https://splash.skyadmin.io/",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+            "api-token": "n0faQedrepaqusu2uzur1chisijuqAxe",
+            "sec-ch-ua": '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"macOS"',
+        }
+
+        try:
+            response = requests.post(
+                "https://skyadmin.io/api/portalregistrations",
+                json=payload,
+                headers=headers,
+                timeout=10,
+            )
+
+            if response.status_code == 200:
+                print("Harvard Club portal registration successful.")
+                # Wait a moment then check internet
+                time.sleep(3)
+                print("Checking internet...")
+                if check_internet():
+                    print("Harvard Club login succeeded and internet is reachable.")
+                    return True
+                else:
+                    print("Registration succeeded but internet not reachable yet.")
+            else:
+                print(
+                    f"Harvard Club portal registration failed: {response.status_code}"
+                )
+                print(f"Response: {response.text}")
+
+        except requests.RequestException as exc:
+            print(f"Harvard Club login failed: {exc}")
+
+        return False
+
+
 def fail(msg, code=1):
     print(f"Error: {msg}", file=sys.stderr)
     sys.exit(code)
@@ -39,7 +169,7 @@ def get_ssid():
         )
         # Expected: "Current Wi-Fi Network: OWL"
         return out.split(": ", 1)[1].strip()
-    except Exception:
+    except Exception:  # intentional broad catch
         return ""
 
 
@@ -198,107 +328,6 @@ def login_captive_portal(username, password):
     return False
 
 
-def login_to_owl():
-    """Handle login for OWL network"""
-    if not (OWL_USERNAME and OWL_PASSWORD):
-        fail("OWL_USERNAME and OWL_PASSWORD environment variables must be set.")
-
-    print("Attempting to log in to the OWL captive portal...")
-    success = login_captive_portal(OWL_USERNAME, OWL_PASSWORD)
-    if not success:
-        fail("Failed to log in after attempts.")
-    print("OWL login attempt complete.")
-
-
-def login_to_bodleian():
-    """Handle login for Bodleian Libraries network"""
-    if not (BOD_USERNAME and BOD_PASSWORD):
-        fail("BOD_USERNAME and BOD_PASSWORD environment variables must be set.")
-    print("Attempting to log in to the Bodleian captive portal...")
-    if not login_bodleian_portal(BOD_USERNAME, BOD_PASSWORD):
-        fail("Failed to log in to Bodleian portal after attempts.")
-    print("Bodleian login attempt complete.")
-
-
-def login_to_harvard():
-    """Handle login for Harvard Club network using SkyAdmin portal"""
-    if not HARVARD_ACCESS_CODE:
-        fail("HARVARD_ACCESS_CODE environment variable must be set.")
-
-    print("Attempting to log in to the Harvard Club captive portal...")
-
-    # Get dynamic network information
-    mac_address = get_mac_address()
-    ip_address = get_ip_address()
-
-    if not mac_address:
-        fail("Could not determine MAC address for network interface")
-
-    if not ip_address:
-        fail("Could not determine IP address for network interface")
-
-    print(f"Using MAC address: {mac_address}")
-    print(f"Using IP address: {ip_address}")
-
-    # The payload from the curl request
-    payload = {
-        "nseid": "0a1000",
-        "property_id": 5175,
-        "gateway_slug": None,
-        "location_index": None,
-        "ppli": None,
-        "vlan_id": 10353,
-        "mac_address": mac_address,
-        "ip_address": ip_address,
-        "registration_method_id": 4,
-        "access_code": HARVARD_ACCESS_CODE,
-    }
-
-    headers = {
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Connection": "keep-alive",
-        "Content-Type": "application/json;charset=UTF-8",
-        "Origin": "https://splash.skyadmin.io",
-        "Referer": "https://splash.skyadmin.io/",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-site",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-        "api-token": "n0faQedrepaqusu2uzur1chisijuqAxe",
-        "sec-ch-ua": '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"macOS"',
-    }
-
-    try:
-        response = requests.post(
-            "https://skyadmin.io/api/portalregistrations",
-            json=payload,
-            headers=headers,
-            timeout=10,
-        )
-
-        if response.status_code == 200:
-            print("Harvard Club portal registration successful.")
-            # Wait a moment then check internet
-            time.sleep(3)
-            print("Checking internet...")
-            if check_internet():
-                print("Harvard Club login succeeded and internet is reachable.")
-                return True
-            else:
-                print("Registration succeeded but internet not reachable yet.")
-        else:
-            print(f"Harvard Club portal registration failed: {response.status_code}")
-            print(f"Response: {response.text}")
-
-    except requests.RequestException as exc:
-        print(f"Harvard Club login failed: {exc}")
-
-    return False
-
-
 def disable_ssl_warnings():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -319,19 +348,21 @@ def main():
 
     # Network handler mapping
     networks = {
-        OWL_NETWORK: login_to_owl,
-        BODLEIAN_NETWORK: login_to_bodleian,
-        HARVARD_NETWORK: login_to_harvard,
+        OWL_NETWORK: Owl,
+        BODLEIAN_NETWORK: Bodleian,
+        HARVARD_NETWORK: Harvard,
     }
 
-    handler = networks.get(ssid)
-    if not handler:
+    klass = networks.get(ssid)
+    if not klass:
         supported = ", ".join(networks.keys())
         print(f"Not on a supported network (current: '{ssid}'). Supported: {supported}")
         return
+
+    network = klass()
     while True:
         print(f"Attempting to log into network: {ssid}")
-        if handler():
+        if network.login():
             break
         time.sleep(2)
 
