@@ -43,6 +43,39 @@ def get_ssid():
         return ""
 
 
+def get_mac_address(interface="en0"):
+    """Get the MAC address of the specified network interface"""
+    try:
+        out = subprocess.check_output(
+            ["/sbin/ifconfig", interface],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        # Look for line containing "ether" followed by MAC address
+        for line in out.split("\n"):
+            if "ether" in line:
+                mac = line.split()[1]
+                # Remove colons and convert to uppercase to match expected format
+                return mac.replace(":", "").upper()
+    except Exception:
+        pass
+    return None
+
+
+def get_ip_address(interface="en0"):
+    """Get the IP address of the specified network interface"""
+    try:
+        out = subprocess.check_output(
+            ["/usr/sbin/ipconfig", "getifaddr", interface],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return out.strip()
+    except Exception:
+        pass
+    return None
+
+
 # Confirm that we have actual internet access
 def check_internet(url=NEVERSSL, timeout=3):
     try:
@@ -200,6 +233,19 @@ def login_to_harvard():
 
     print("Attempting to log in to the Harvard Club captive portal...")
 
+    # Get dynamic network information
+    mac_address = get_mac_address()
+    ip_address = get_ip_address()
+
+    if not mac_address:
+        fail("Could not determine MAC address for network interface")
+
+    if not ip_address:
+        fail("Could not determine IP address for network interface")
+
+    print(f"Using MAC address: {mac_address}")
+    print(f"Using IP address: {ip_address}")
+
     # The payload from the curl request
     payload = {
         "nseid": "0a1000",
@@ -208,8 +254,8 @@ def login_to_harvard():
         "location_index": None,
         "ppli": None,
         "vlan_id": 10353,
-        "mac_address": "603E5F34CE6B",  # This might need to be dynamic
-        "ip_address": "172.20.3.74",  # This might need to be dynamic
+        "mac_address": mac_address,
+        "ip_address": ip_address,
         "registration_method_id": 4,
         "access_code": HARVARD_ACCESS_CODE,
     }
