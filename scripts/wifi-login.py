@@ -11,7 +11,8 @@ from abc import ABC, abstractmethod
 
 
 LOGIN_URL = "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
-NEVERSSL = "http://neverssl.com/"
+NEVERSSL = "http://captive.apple.com"
+NEVERSSL_CONTENT = "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 
 OWL_USERNAME = os.getenv("OWL_USERNAME")
@@ -212,7 +213,7 @@ def check_internet(url=NEVERSSL, timeout=3):
         resp = requests.get(url, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
         # So we check for actual content.
-        if "NeverSSL" in resp.text:
+        if NEVERSSL_CONTENT in resp.text:
             return True
         return resp.status_code == 200
     except requests.RequestException:
