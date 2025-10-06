@@ -49,10 +49,37 @@ class Owl(WiFiNetwork):
         """Handle login for OWL network"""
         credentials = self.get_credentials()
         print("Attempting to log in to the OWL captive portal...")
-        success = login_captive_portal(credentials["auth_user"], credentials["auth_pass"])
+        success = self.login_captive_portal(credentials["auth_user"], credentials["auth_pass"])
         if success:
             print("OWL login attempt complete.")
         return success
+
+    def login_captive_portal(self, username, password):
+        session = requests.Session()
+        print(f"Login attempt...")
+        try:
+            resp = session.post(
+                LOGIN_URL,
+                data={
+                    "auth_user": username,
+                    "auth_pass": password,
+                    "accept": "Continue",
+                    "redirurl": "http://www.gstatic.com/generate_204",
+                    "zone": "tawny_owl",
+                },
+                timeout=5,
+                verify=False,  # mirrors -k
+            )
+        except requests.RequestException as exc:
+            print("Login POST failed or timed out.")
+            return False
+        if check_internet():
+            print("Login succeeded and internet is reachable.")
+            return True
+        else:
+            print("Login POST succeeded but internet not reachable.")
+            print(f"Is username {username} still right?")
+        return False
 
 
 class Bodleian(WiFiNetwork):
@@ -70,9 +97,88 @@ class Bodleian(WiFiNetwork):
         """Handle login for Bodleian Libraries network"""
         credentials = self.get_credentials()
         print("Attempting to log in to the Bodleian captive portal...")
-        if not login_bodleian_portal(credentials["username"], credentials["password"]):
+        if not self.login_bodleian_portal(credentials["username"], credentials["password"]):
             fail("Failed to log in to Bodleian portal after attempts.")
         print("Bodleian login attempt complete.")
+
+    def login_bodleian_portal(self, username, password):
+        """Login to Bodleian Reader WiFi network"""
+        session = requests.Session()
+        print(f"Bodleian login attempt...")
+        try:
+            if self.make_attempt(session, username, password):
+                return True
+        except ConnectionError:
+            print("Connection error during attempt.")
+        return False
+
+    def make_attempt(self, session, username, password):
+        # Step 1: Make request to generate_204 to get redirect
+        print("Making initial request to detect captive portal...")
+        resp = session.get(GSTATIC_204, timeout=10, allow_redirects=False)
+
+        if resp.status_code != 200:
+            print("Initial request failed")
+            return False
+
+        if not b"window.location" in resp.content:
+            print("HTTP 200 but no window.location")
+            return False
+
+        print("Redirect detected")
+        tokenized_url = resp.content.split(b"window.location=")[1].split(b";")[0]
+        redirect_url = tokenized_url.decode("utf-8")
+        redirect_url = redirect_url.strip('"')
+        print(f"Redirecting to: {redirect_url}")
+
+        # Step 2: Follow redirect to get auth form
+        if not redirect_url:
+            return False
+
+        print(f"Following redirect to: {redirect_url}")
+        resp = session.get(redirect_url, timeout=10)
+
+        # Step 3: Parse the form to extract hidden values
+        soup = BeautifulSoup(resp.text, "html.parser")
+        form = soup.find("form", {"method": "post"})
+
+        if not form:
+            print("Could not find login form")
+            return False
+
+        # Extract hidden form values
+        form_data = {}
+        for input_tag in form.find_all("input", type="hidden"):
+            name = input_tag.get("name", "")
+            value = input_tag.get("value", "")
+            if name:  # Only add if name is not empty
+                form_data[name] = value
+
+        # Add username and password
+        form_data["username"] = username
+        form_data["password"] = password
+
+        print(f"Submitting form...")
+
+        # Step 4: Submit the form
+        action = form.get("action", "/")
+        if action.startswith("/"):
+            # Relative URL - construct full URL
+            parsed_url = urlparse(redirect_url)
+            submit_url = f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
+        else:
+            submit_url = action
+
+        resp = session.post(submit_url, data=form_data, timeout=10)
+        print("Form submitted, waiting to verify internet access...")
+        time.sleep(5)
+
+        # Step 5: Check if login succeeded
+        if check_internet():
+            print("Bodleian login succeeded and internet is reachable.")
+            return True
+        print("Form submitted but internet not reachable yet.")
+        return False
 
 
 class Harvard(WiFiNetwork):
@@ -317,115 +423,6 @@ def check_internet(url=NEVERSSL, timeout=3):
         return resp.status_code == 200
     except requests.RequestException:
         return False
-
-
-def login_bodleian_portal(username, password):
-    """Login to Bodleian Reader WiFi network"""
-    session = requests.Session()
-    print(f"Bodleian login attempt...")
-    try:
-        if make_attempt(session, username, password):
-            return True
-    except ConnectionError:
-        print("Connection error during attempt.")
-    return False
-
-
-def make_attempt(session, username, password):
-    # Step 1: Make request to generate_204 to get redirect
-    print("Making initial request to detect captive portal...")
-    resp = session.get(GSTATIC_204, timeout=10, allow_redirects=False)
-
-    if resp.status_code != 200:
-        print("Initial request failed")
-        return False
-
-    if not b"window.location" in resp.content:
-        print("HTTP 200 but no window.location")
-        return False
-
-    print("Redirect detected")
-    tokenized_url = resp.content.split(b"window.location=")[1].split(b";")[0]
-    redirect_url = tokenized_url.decode("utf-8")
-    redirect_url = redirect_url.strip('"')
-    print(f"Redirecting to: {redirect_url}")
-
-    # Step 2: Follow redirect to get auth form
-    if not redirect_url:
-        return False
-
-    print(f"Following redirect to: {redirect_url}")
-    resp = session.get(redirect_url, timeout=10)
-
-    # Step 3: Parse the form to extract hidden values
-    soup = BeautifulSoup(resp.text, "html.parser")
-    form = soup.find("form", {"method": "post"})
-
-    if not form:
-        print("Could not find login form")
-        return False
-
-    # Extract hidden form values
-    form_data = {}
-    for input_tag in form.find_all("input", type="hidden"):
-        name = input_tag.get("name", "")
-        value = input_tag.get("value", "")
-        if name:  # Only add if name is not empty
-            form_data[name] = value
-
-    # Add username and password
-    form_data["username"] = username
-    form_data["password"] = password
-
-    print(f"Submitting form...")
-
-    # Step 4: Submit the form
-    action = form.get("action", "/")
-    if action.startswith("/"):
-        # Relative URL - construct full URL
-        parsed_url = urlparse(redirect_url)
-        submit_url = f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
-    else:
-        submit_url = action
-
-    resp = session.post(submit_url, data=form_data, timeout=10)
-    print("Form submitted, waiting to verify internet access...")
-    time.sleep(5)
-
-    # Step 5: Check if login succeeded
-    if check_internet():
-        print("Bodleian login succeeded and internet is reachable.")
-        return True
-    print("Form submitted but internet not reachable yet.")
-    return False
-
-
-def login_captive_portal(username, password):
-    session = requests.Session()
-    print(f"Login attempt...")
-    try:
-        resp = session.post(
-            LOGIN_URL,
-            data={
-                "auth_user": username,
-                "auth_pass": password,
-                "accept": "Continue",
-                "redirurl": "http://www.gstatic.com/generate_204",
-                "zone": "tawny_owl",
-            },
-            timeout=5,
-            verify=False,  # mirrors -k
-        )
-    except requests.RequestException as exc:
-        print("Login POST failed or timed out.")
-        return False
-    if check_internet():
-        print("Login succeeded and internet is reachable.")
-        return True
-    else:
-        print("Login POST succeeded but internet not reachable.")
-        print(f"Is username {username} still right?")
-    return False
 
 
 def disable_ssl_warnings():
