@@ -15,12 +15,6 @@ NEVERSSL = "http://captive.apple.com"
 NEVERSSL_CONTENT = "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 
-OWL_USERNAME = os.getenv("OWL_USERNAME")
-OWL_PASSWORD = os.getenv("OWL_PASSWORD")
-BOD_USERNAME = os.getenv("BOD_USERNAME")
-BOD_PASSWORD = os.getenv("BOD_PASSWORD")
-HARVARD_ACCESS_CODE = os.getenv("HARVARD_ACCESS_CODE")
-
 # Network constants
 OWL_NETWORK = "OWL"
 BODLEIAN_NETWORK = "Bodleian-Libraries"
@@ -42,9 +36,11 @@ class WiFiNetwork(ABC):
 
 class Owl(WiFiNetwork):
     def get_credentials(self):
-        if not (OWL_USERNAME and OWL_PASSWORD):
+        username = os.getenv("OWL_USERNAME")
+        password = os.getenv("OWL_PASSWORD")
+        if not (username and password):
             fail("OWL_USERNAME and OWL_PASSWORD environment variables must be set.")
-        return OWL_USERNAME, OWL_PASSWORD
+        return username, password
 
     def login(self):
         """Handle login for OWL network"""
@@ -58,9 +54,11 @@ class Owl(WiFiNetwork):
 
 class Bodleian(WiFiNetwork):
     def get_credentials(self):
-        if not (BOD_USERNAME and BOD_PASSWORD):
+        username = os.getenv("BOD_USERNAME")
+        password = os.getenv("BOD_PASSWORD")
+        if not (username and password):
             fail("BOD_USERNAME and BOD_PASSWORD environment variables must be set.")
-        return BOD_USERNAME, BOD_PASSWORD
+        return username, password
 
     def login(self):
         """Handle login for Bodleian Libraries network"""
@@ -73,9 +71,10 @@ class Bodleian(WiFiNetwork):
 
 class Harvard(WiFiNetwork):
     def get_credentials(self):
-        if not HARVARD_ACCESS_CODE:
+        access_code = os.getenv("HARVARD_ACCESS_CODE")
+        if not access_code:
             fail("HARVARD_ACCESS_CODE environment variable must be set.")
-        return (HARVARD_ACCESS_CODE,)
+        return (access_code,)
 
     def login(self):
         """Handle login for Harvard Club network using SkyAdmin portal"""
