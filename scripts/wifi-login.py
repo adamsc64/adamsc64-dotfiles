@@ -25,6 +25,7 @@ HARVARD_ACCESS_CODE = os.getenv("HARVARD_ACCESS_CODE")
 OWL_NETWORK = "OWL"
 BODLEIAN_NETWORK = "Bodleian-Libraries"
 HARVARD_NETWORK = "Harvard Club"
+YALE_NETWORK = "The Yale Club NYC"
 
 
 class WiFiNetwork(ABC):
@@ -152,6 +153,95 @@ class Harvard(WiFiNetwork):
 
         except requests.RequestException as exc:
             print(f"Harvard Club login failed: {exc}")
+
+        return False
+
+
+class YaleClub(WiFiNetwork):
+    def get_credentials(self):
+        access_code = os.getenv("YALE_ACCESS_CODE")
+        if not access_code:
+            fail("YALE_ACCESS_CODE environment variable must be set.")
+        return (access_code,)
+
+    def login(self):
+        """Handle login for Yale Club network using SkyAdmin portal"""
+        (access_code,) = self.get_credentials()
+
+        print("Attempting to log in to the Yale Club captive portal...")
+
+        # Get dynamic network information
+        mac_address = get_mac_address()
+        ip_address = get_ip_address()
+
+        if not mac_address:
+            fail("Could not determine MAC address for network interface")
+
+        if not ip_address:
+            fail("Could not determine IP address for network interface")
+
+        print(f"Using MAC address: {mac_address}")
+        print(f"Using IP address: {ip_address}")
+
+        # The payload from the new curl request
+        payload = {
+            "nseid": "046064",
+            "property_id": 6106,
+            "gateway_slug": None,
+            "location_index": None,
+            "ppli": None,
+            "vlan_id": 20864,
+            "mac_address": mac_address,
+            "ip_address": ip_address,
+            "registration_method_id": 4,
+            "access_code": access_code,
+        }
+
+        headers = {
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/json;charset=UTF-8",
+            "Origin": "https://splash.skyadmin.io",
+            "Pragma": "no-cache",
+            "Referer": "https://splash.skyadmin.io/",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+            "api-token": "n0faQedrepaqusu2uzur1chisijuqAxe",
+            "sec-ch-ua": '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"macOS"',
+        }
+
+        try:
+            response = requests.post(
+                "https://skyadmin.io/api/portalregistrations",
+                json=payload,
+                headers=headers,
+                timeout=10,
+            )
+
+            if response.status_code == 200:
+                print("Yale Club portal registration successful.")
+                # Wait a moment then check internet
+                time.sleep(3)
+                print("Checking internet...")
+                if check_internet():
+                    print("Yale Club login succeeded and internet is reachable.")
+                    return True
+                else:
+                    print("Registration succeeded but internet not reachable yet.")
+            else:
+                print(
+                    f"Yale Club portal registration failed: {response.status_code}"
+                )
+                print(f"Response: {response.text}")
+
+        except requests.RequestException as exc:
+            print(f"Yale Club login failed: {exc}")
 
         return False
 
@@ -352,6 +442,7 @@ def main():
         OWL_NETWORK: Owl,
         BODLEIAN_NETWORK: Bodleian,
         HARVARD_NETWORK: Harvard,
+        YALE_NETWORK: YaleClub,
     }
 
     klass = networks.get(ssid)
