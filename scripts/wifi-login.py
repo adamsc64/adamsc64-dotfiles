@@ -24,8 +24,8 @@ YALE_NETWORK = "The Yale Club NYC"
 
 class WiFiNetwork(ABC):
     @abstractmethod
-    def get_credentials(self) -> tuple:
-        """Return (username, password) or equivalent credentials"""
+    def get_credentials(self) -> dict:
+        """Return dict mapping HTTP parameter names to credential values"""
         pass
 
     @abstractmethod
@@ -40,13 +40,16 @@ class Owl(WiFiNetwork):
         password = os.getenv("OWL_PASSWORD")
         if not (username and password):
             fail("OWL_USERNAME and OWL_PASSWORD environment variables must be set.")
-        return username, password
+        return {
+            "auth_user": username,
+            "auth_pass": password
+        }
 
     def login(self):
         """Handle login for OWL network"""
-        username, password = self.get_credentials()
+        credentials = self.get_credentials()
         print("Attempting to log in to the OWL captive portal...")
-        success = login_captive_portal(username, password)
+        success = login_captive_portal(credentials["auth_user"], credentials["auth_pass"])
         if success:
             print("OWL login attempt complete.")
         return success
@@ -58,13 +61,16 @@ class Bodleian(WiFiNetwork):
         password = os.getenv("BOD_PASSWORD")
         if not (username and password):
             fail("BOD_USERNAME and BOD_PASSWORD environment variables must be set.")
-        return username, password
+        return {
+            "username": username,
+            "password": password
+        }
 
     def login(self):
         """Handle login for Bodleian Libraries network"""
-        username, password = self.get_credentials()
+        credentials = self.get_credentials()
         print("Attempting to log in to the Bodleian captive portal...")
-        if not login_bodleian_portal(username, password):
+        if not login_bodleian_portal(credentials["username"], credentials["password"]):
             fail("Failed to log in to Bodleian portal after attempts.")
         print("Bodleian login attempt complete.")
 
@@ -74,11 +80,13 @@ class Harvard(WiFiNetwork):
         access_code = os.getenv("HARVARD_ACCESS_CODE")
         if not access_code:
             fail("HARVARD_ACCESS_CODE environment variable must be set.")
-        return (access_code,)
+        return {
+            "access_code": access_code
+        }
 
     def login(self):
         """Handle login for Harvard Club network using SkyAdmin portal"""
-        (access_code,) = self.get_credentials()
+        credentials = self.get_credentials()
 
         print("Attempting to log in to the Harvard Club captive portal...")
 
@@ -106,8 +114,8 @@ class Harvard(WiFiNetwork):
             "mac_address": mac_address,
             "ip_address": ip_address,
             "registration_method_id": 4,
-            "access_code": access_code,
         }
+        payload.update(credentials)
 
         headers = {
             "Accept": "application/json, text/plain, */*",
@@ -161,11 +169,13 @@ class YaleClub(WiFiNetwork):
         access_code = os.getenv("YALE_ACCESS_CODE")
         if not access_code:
             fail("YALE_ACCESS_CODE environment variable must be set.")
-        return (access_code,)
+        return {
+            "access_code": access_code
+        }
 
     def login(self):
         """Handle login for Yale Club network using SkyAdmin portal"""
-        (access_code,) = self.get_credentials()
+        credentials = self.get_credentials()
 
         print("Attempting to log in to the Yale Club captive portal...")
 
@@ -193,8 +203,8 @@ class YaleClub(WiFiNetwork):
             "mac_address": mac_address,
             "ip_address": ip_address,
             "registration_method_id": 4,
-            "access_code": access_code,
         }
+        payload.update(credentials)
 
         headers = {
             "Accept": "application/json, text/plain, */*",
