@@ -181,7 +181,7 @@ class Bodleian(WiFiNetwork):
         return False
 
 
-class Harvard(WiFiNetwork):
+class HarvardClub(WiFiNetwork):
     def get_credentials(self):
         access_code = os.getenv("HARVARD_ACCESS_CODE")
         if not access_code:
@@ -447,7 +447,7 @@ def main():
     networks = {
         OWL_NETWORK: Owl,
         BODLEIAN_NETWORK: Bodleian,
-        HARVARD_NETWORK: Harvard,
+        HARVARD_NETWORK: HarvardClub,
         YALE_NETWORK: YaleClub,
     }
 
