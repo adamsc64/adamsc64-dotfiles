@@ -9,10 +9,6 @@ from bs4 import BeautifulSoup
 import urllib3
 from abc import ABC, abstractmethod
 
-
-LOGIN_URL = "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
-NEVERSSL = "http://captive.apple.com"
-NEVERSSL_CONTENT = "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 
 # Network constants
@@ -55,6 +51,8 @@ class Owl(WiFiNetwork):
         return success
 
     def login_captive_portal(self, username, password):
+        LOGIN_URL = "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
+
         session = requests.Session()
         print(f"Login attempt...")
         try:
@@ -413,9 +411,11 @@ def get_ip_address(interface="en0"):
 
 
 # Confirm that we have actual internet access
-def check_internet(url=NEVERSSL, timeout=3):
+def check_internet(timeout=3):
+    NEVERSSL_URL = "http://captive.apple.com"
+    NEVERSSL_CONTENT = "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
     try:
-        resp = requests.get(url, timeout=timeout, allow_redirects=False)
+        resp = requests.get(NEVERSSL_URL, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
         # So we check for actual content.
         if NEVERSSL_CONTENT in resp.text:
