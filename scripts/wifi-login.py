@@ -36,22 +36,23 @@ class Owl(WiFiNetwork):
         password = os.getenv("OWL_PASSWORD")
         if not (username and password):
             fail("OWL_USERNAME and OWL_PASSWORD environment variables must be set.")
-        return {
-            "auth_user": username,
-            "auth_pass": password
-        }
+        return {"auth_user": username, "auth_pass": password}
 
     def login(self):
         """Handle login for OWL network"""
         credentials = self.get_credentials()
         print("Attempting to log in to the OWL captive portal...")
-        success = self.login_captive_portal(credentials["auth_user"], credentials["auth_pass"])
+        success = self.login_captive_portal(
+            credentials["auth_user"], credentials["auth_pass"]
+        )
         if success:
             print("OWL login attempt complete.")
         return success
 
     def login_captive_portal(self, username, password):
-        LOGIN_URL = "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
+        LOGIN_URL = (
+            "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
+        )
 
         session = requests.Session()
         print(f"Login attempt...")
@@ -86,16 +87,15 @@ class Bodleian(WiFiNetwork):
         password = os.getenv("BOD_PASSWORD")
         if not (username and password):
             fail("BOD_USERNAME and BOD_PASSWORD environment variables must be set.")
-        return {
-            "username": username,
-            "password": password
-        }
+        return {"username": username, "password": password}
 
     def login(self):
         """Handle login for Bodleian Libraries network"""
         credentials = self.get_credentials()
         print("Attempting to log in to the Bodleian captive portal...")
-        if not self.login_bodleian_portal(credentials["username"], credentials["password"]):
+        if not self.login_bodleian_portal(
+            credentials["username"], credentials["password"]
+        ):
             fail("Failed to log in to Bodleian portal after attempts.")
         print("Bodleian login attempt complete.")
 
@@ -184,9 +184,7 @@ class HarvardClub(WiFiNetwork):
         access_code = os.getenv("HARVARD_ACCESS_CODE")
         if not access_code:
             fail("HARVARD_ACCESS_CODE environment variable must be set.")
-        return {
-            "access_code": access_code
-        }
+        return {"access_code": access_code}
 
     def login(self):
         """Handle login for Harvard Club network using SkyAdmin portal"""
@@ -273,9 +271,7 @@ class YaleClub(WiFiNetwork):
         access_code = os.getenv("YALE_ACCESS_CODE")
         if not access_code:
             fail("YALE_ACCESS_CODE environment variable must be set.")
-        return {
-            "access_code": access_code
-        }
+        return {"access_code": access_code}
 
     def login(self):
         """Handle login for Yale Club network using SkyAdmin portal"""
@@ -348,9 +344,7 @@ class YaleClub(WiFiNetwork):
                 else:
                     print("Registration succeeded but internet not reachable yet.")
             else:
-                print(
-                    f"Yale Club portal registration failed: {response.status_code}"
-                )
+                print(f"Yale Club portal registration failed: {response.status_code}")
                 print(f"Response: {response.text}")
 
         except requests.RequestException as exc:
@@ -413,7 +407,9 @@ def get_ip_address(interface="en0"):
 # Confirm that we have actual internet access
 def check_internet(timeout=3):
     NEVERSSL_URL = "http://captive.apple.com"
-    NEVERSSL_CONTENT = "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
+    NEVERSSL_CONTENT = (
+        "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
+    )
     try:
         resp = requests.get(NEVERSSL_URL, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
