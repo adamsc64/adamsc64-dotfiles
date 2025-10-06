@@ -11,14 +11,13 @@ from abc import ABC, abstractmethod
 
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 
-# Network constants
-OWL_NETWORK = "OWL"
-BODLEIAN_NETWORK = "Bodleian-Libraries"
-HARVARD_NETWORK = "Harvard Club"
-YALE_NETWORK = "The Yale Club NYC"
-
 
 class WiFiNetwork(ABC):
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if not hasattr(cls, 'SSID') or cls.SSID is None:
+            raise TypeError(f"Class {cls.__name__} must define SSID class variable")
+
     @abstractmethod
     def get_credentials(self) -> dict:
         """Return dict mapping HTTP parameter names to credential values"""
@@ -31,6 +30,8 @@ class WiFiNetwork(ABC):
 
 
 class Owl(WiFiNetwork):
+    SSID = "OWL"
+
     def get_credentials(self):
         username = os.getenv("OWL_USERNAME")
         password = os.getenv("OWL_PASSWORD")
@@ -82,6 +83,8 @@ class Owl(WiFiNetwork):
 
 
 class Bodleian(WiFiNetwork):
+    SSID = "Bodleian-Libraries"
+
     def get_credentials(self):
         username = os.getenv("BOD_USERNAME")
         password = os.getenv("BOD_PASSWORD")
@@ -180,6 +183,8 @@ class Bodleian(WiFiNetwork):
 
 
 class HarvardClub(WiFiNetwork):
+    SSID = "Harvard Club"
+
     def get_credentials(self):
         access_code = os.getenv("HARVARD_ACCESS_CODE")
         if not access_code:
@@ -267,6 +272,8 @@ class HarvardClub(WiFiNetwork):
 
 
 class YaleClub(WiFiNetwork):
+    SSID = "The Yale Club NYC"
+
     def get_credentials(self):
         access_code = os.getenv("YALE_ACCESS_CODE")
         if not access_code:
@@ -439,12 +446,12 @@ def main():
         print("No network seems available.")
         return
 
-    # Network handler mapping
+    # Build network handler mapping from classes
     networks = {
-        OWL_NETWORK: Owl,
-        BODLEIAN_NETWORK: Bodleian,
-        HARVARD_NETWORK: HarvardClub,
-        YALE_NETWORK: YaleClub,
+        Owl.SSID: Owl,
+        Bodleian.SSID: Bodleian,
+        HarvardClub.SSID: HarvardClub,
+        YaleClub.SSID: YaleClub,
     }
 
     klass = networks.get(ssid)
