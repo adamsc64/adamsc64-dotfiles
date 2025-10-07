@@ -248,7 +248,9 @@ class HarvardClub(WiFiNetwork):
                 headers=headers,
                 timeout=10,
             )
-
+            invalid = 'This access code is invalid at this time.' in str(response.content)
+            if invalid:
+                fail(f"Club access code {access_code} needs to be rotated.")
             if response.status_code == 200:
                 print("Harvard Club portal registration successful.")
                 # Wait a moment then check internet
