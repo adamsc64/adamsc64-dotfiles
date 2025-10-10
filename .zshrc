@@ -158,13 +158,6 @@ stty erase '^?'
 # render properly or may clutter the logs.
 export BUILDKIT_PROGRESS=plain
 
-# if the script `github-copilot-cli` is in path
-if command -v github-copilot-cli &> /dev/null
-then
-    # alias the script `github-copilot-cli` to `copilot`
-    eval "$(github-copilot-cli alias -- "$0")"
-fi
-
 # rbenv configuration
 export PATH="$HOME/.rbenv/bin:$PATH"
 if command -v rbenv 1>/dev/null 2>&1; then
