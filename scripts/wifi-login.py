@@ -101,6 +101,7 @@ class Bodleian(WiFiNetwork):
         ):
             fail("Failed to log in to Bodleian portal after attempts.")
         print("Bodleian login attempt complete.")
+        return True
 
     def login_bodleian_portal(self, username, password):
         """Login to Bodleian Reader WiFi network"""
@@ -117,7 +118,9 @@ class Bodleian(WiFiNetwork):
         # Step 1: Make request to generate_204 to get redirect
         print("Making initial request to detect captive portal...")
         resp = session.get(GSTATIC_204, timeout=10, allow_redirects=False)
-
+        if resp.status_code == 204:
+            print("No captive portal detected; internet is accessible.")
+            return True  # Already have internet
         if resp.status_code != 200:
             print("Initial request failed")
             return False
@@ -415,16 +418,16 @@ def get_ip_address(interface="en0"):
 
 # Confirm that we have actual internet access
 def check_internet(timeout=3):
-    NEVERSSL_URL = "http://captive.apple.com"
-    NEVERSSL_CONTENT = (
-        "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
+    NEVERSSL_URL = "http://www.gstatic.com/generate_204"
+    JS_REDIRECT = (
+        'window.location="https://bodreader.bodleian.ox.ac.uk'
     )
     try:
         resp = requests.get(NEVERSSL_URL, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
         # So we check for actual content.
-        if NEVERSSL_CONTENT in resp.text:
-            return True
+        if JS_REDIRECT in resp.text:
+            return False
         return resp.status_code == 200
     except requests.RequestException:
         return False
