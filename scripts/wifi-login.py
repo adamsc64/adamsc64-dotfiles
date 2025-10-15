@@ -99,7 +99,8 @@ class Bodleian(WiFiNetwork):
         if not self.login_bodleian_portal(
             credentials["username"], credentials["password"]
         ):
-            fail("Failed to log in to Bodleian portal after attempts.")
+            print("Failed to log in to Bodleian portal.")
+            return False
         print("Bodleian login attempt complete.")
         return True
 
