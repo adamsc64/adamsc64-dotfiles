@@ -15,7 +15,7 @@ GSTATIC_204 = "http://www.gstatic.com/generate_204"
 class WiFiNetwork(ABC):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, 'SSID') or cls.SSID is None:
+        if not hasattr(cls, "SSID") or cls.SSID is None:
             raise TypeError(f"Class {cls.__name__} must define SSID class variable")
 
     @abstractmethod
@@ -252,7 +252,9 @@ class HarvardClub(WiFiNetwork):
                 headers=headers,
                 timeout=10,
             )
-            invalid = 'This access code is invalid at this time.' in str(response.content)
+            invalid = "This access code is invalid at this time." in str(
+                response.content
+            )
             if invalid:
                 fail(f"Club access code {access_code} needs to be rotated.")
             if response.status_code == 200:
@@ -420,9 +422,7 @@ def get_ip_address(interface="en0"):
 # Confirm that we have actual internet access
 def check_internet(timeout=3):
     NEVERSSL_URL = "http://www.gstatic.com/generate_204"
-    JS_REDIRECT = (
-        'window.location="https://bodreader.bodleian.ox.ac.uk'
-    )
+    JS_REDIRECT = 'window.location="https://bodreader.bodleian.ox.ac.uk'
     try:
         resp = requests.get(NEVERSSL_URL, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
