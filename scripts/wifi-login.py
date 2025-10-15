@@ -429,7 +429,7 @@ def check_internet(timeout=3):
         # So we check for actual content.
         if JS_REDIRECT in resp.text:
             return False
-        return resp.status_code == 200
+        return resp.status_code == 204
     except requests.RequestException:
         return False
 
