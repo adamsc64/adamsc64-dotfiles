@@ -43,14 +43,12 @@ class Owl(WiFiNetwork):
         """Handle login for OWL network"""
         credentials = self.get_credentials()
         print("Attempting to log in to the OWL captive portal...")
-        success = self.login_captive_portal(
-            credentials["auth_user"], credentials["auth_pass"]
-        )
+        success = self.login_captive_portal(credentials)
         if success:
             print("OWL login attempt complete.")
         return success
 
-    def login_captive_portal(self, username, password):
+    def login_captive_portal(self, credentials):
         LOGIN_URL = (
             "https://tawny-owl-captive-portal.it.ox.ac.uk:8003/index.php?zone=tawny_owl"
         )
@@ -61,8 +59,8 @@ class Owl(WiFiNetwork):
             resp = session.post(
                 LOGIN_URL,
                 data={
-                    "auth_user": username,
-                    "auth_pass": password,
+                    "auth_user": credentials["auth_user"],
+                    "auth_pass": credentials["auth_pass"],
                     "accept": "Continue",
                     "redirurl": "http://www.gstatic.com/generate_204",
                     "zone": "tawny_owl",
@@ -78,7 +76,7 @@ class Owl(WiFiNetwork):
             return True
         else:
             print("Login POST succeeded but internet not reachable.")
-            print(f"Is username {username} still right?")
+            print(f"Is username {credentials['auth_user']} still right?")
         return False
 
 
@@ -96,26 +94,24 @@ class Bodleian(WiFiNetwork):
         """Handle login for Bodleian Libraries network"""
         credentials = self.get_credentials()
         print("Attempting to log in to the Bodleian captive portal...")
-        if not self.login_bodleian_portal(
-            credentials["username"], credentials["password"]
-        ):
+        if not self.login_bodleian_portal(credentials):
             print("Failed to log in to Bodleian portal.")
             return False
         print("Bodleian login attempt complete.")
         return True
 
-    def login_bodleian_portal(self, username, password):
+    def login_bodleian_portal(self, credentials):
         """Login to Bodleian Reader WiFi network"""
         session = requests.Session()
         print(f"Bodleian login attempt...")
         try:
-            if self.make_attempt(session, username, password):
+            if self.make_attempt(session, credentials):
                 return True
         except ConnectionError:
             print("Connection error during attempt.")
         return False
 
-    def make_attempt(self, session, username, password):
+    def make_attempt(self, session, credentials):
         # Step 1: Make request to generate_204 to get redirect
         print("Making initial request to detect captive portal...")
         resp = session.get(GSTATIC_204, timeout=10, allow_redirects=False)
@@ -160,8 +156,8 @@ class Bodleian(WiFiNetwork):
                 form_data[name] = value
 
         # Add username and password
-        form_data["username"] = username
-        form_data["password"] = password
+        form_data["username"] = credentials["username"]
+        form_data["password"] = credentials["password"]
 
         print(f"Submitting form...")
 
