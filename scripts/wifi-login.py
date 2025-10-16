@@ -186,20 +186,35 @@ class Bodleian(WiFiNetwork):
         return False
 
 
-class HarvardClub(WiFiNetwork):
-    SSID = "Harvard Club"
+class SkyAdminNetwork(WiFiNetwork):
+    """Base class for networks using SkyAdmin portal authentication"""
+
+    # Subclasses must define these
+    NSEID = None
+    PROPERTY_ID = None
+    VLAN_ID = None
+    ENV_VAR = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        required = ["NSEID", "PROPERTY_ID", "VLAN_ID", "ENV_VAR"]
+        for attr in required:
+            if not hasattr(cls, attr) or getattr(cls, attr) is None:
+                raise TypeError(
+                    f"Class {cls.__name__} must define {attr} class variable"
+                )
 
     def get_credentials(self):
-        access_code = os.getenv("HARVARD_ACCESS_CODE")
+        access_code = os.getenv(self.ENV_VAR)
         if not access_code:
-            fail("HARVARD_ACCESS_CODE environment variable must be set.")
+            fail(f"{self.ENV_VAR} environment variable must be set.")
         return {"access_code": access_code}
 
     def login(self):
-        """Handle login for Harvard Club network using SkyAdmin portal"""
+        """Handle login for SkyAdmin-based network portal"""
         credentials = self.get_credentials()
 
-        print("Attempting to log in to the Harvard Club captive portal...")
+        print(f"Attempting to log in to the {self.SSID} captive portal...")
 
         # Get dynamic network information
         mac_address = get_mac_address()
@@ -214,14 +229,14 @@ class HarvardClub(WiFiNetwork):
         print(f"Using MAC address: {mac_address}")
         print(f"Using IP address: {ip_address}")
 
-        # The payload from the curl request
+        # Build payload with network-specific configuration
         payload = {
-            "nseid": "0a1000",
-            "property_id": 5175,
+            "nseid": self.NSEID,
+            "property_id": self.PROPERTY_ID,
             "gateway_slug": None,
             "location_index": None,
             "ppli": None,
-            "vlan_id": 10353,
+            "vlan_id": self.VLAN_ID,
             "mac_address": mac_address,
             "ip_address": ip_address,
             "registration_method_id": 4,
@@ -252,120 +267,49 @@ class HarvardClub(WiFiNetwork):
                 headers=headers,
                 timeout=10,
             )
+
+            # Check for invalid access code
             invalid = "This access code is invalid at this time." in str(
                 response.content
             )
             if invalid:
-                fail(f"Club access code {access_code} needs to be rotated.")
+                access_code = credentials.get("access_code", "")
+                fail(f"Access code {access_code} needs to be rotated.")
+
             if response.status_code == 200:
-                print("Harvard Club portal registration successful.")
+                print(f"{self.SSID} portal registration successful.")
                 # Wait a moment then check internet
                 time.sleep(3)
                 print("Checking internet...")
                 if check_internet():
-                    print("Harvard Club login succeeded and internet is reachable.")
+                    print(f"{self.SSID} login succeeded and internet is reachable.")
                     return True
                 else:
                     print("Registration succeeded but internet not reachable yet.")
             else:
-                print(
-                    f"Harvard Club portal registration failed: {response.status_code}"
-                )
+                print(f"{self.SSID} portal registration failed: {response.status_code}")
                 print(f"Response: {response.text}")
 
         except requests.RequestException as exc:
-            print(f"Harvard Club login failed: {exc}")
+            print(f"{self.SSID} login failed: {exc}")
 
         return False
 
 
-class YaleClub(WiFiNetwork):
+class HarvardClub(SkyAdminNetwork):
+    SSID = "Harvard Club"
+    NSEID = "0a1000"
+    PROPERTY_ID = 5175
+    VLAN_ID = 10353
+    ENV_VAR = "HARVARD_ACCESS_CODE"
+
+
+class YaleClub(SkyAdminNetwork):
     SSID = "The Yale Club NYC"
-
-    def get_credentials(self):
-        access_code = os.getenv("YALE_ACCESS_CODE")
-        if not access_code:
-            fail("YALE_ACCESS_CODE environment variable must be set.")
-        return {"access_code": access_code}
-
-    def login(self):
-        """Handle login for Yale Club network using SkyAdmin portal"""
-        credentials = self.get_credentials()
-
-        print("Attempting to log in to the Yale Club captive portal...")
-
-        # Get dynamic network information
-        mac_address = get_mac_address()
-        ip_address = get_ip_address()
-
-        if not mac_address:
-            fail("Could not determine MAC address for network interface")
-
-        if not ip_address:
-            fail("Could not determine IP address for network interface")
-
-        print(f"Using MAC address: {mac_address}")
-        print(f"Using IP address: {ip_address}")
-
-        # The payload from the new curl request
-        payload = {
-            "nseid": "046064",
-            "property_id": 6106,
-            "gateway_slug": None,
-            "location_index": None,
-            "ppli": None,
-            "vlan_id": 20864,
-            "mac_address": mac_address,
-            "ip_address": ip_address,
-            "registration_method_id": 4,
-        }
-        payload.update(credentials)
-
-        headers = {
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "Content-Type": "application/json;charset=UTF-8",
-            "Origin": "https://splash.skyadmin.io",
-            "Pragma": "no-cache",
-            "Referer": "https://splash.skyadmin.io/",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-site",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-            "api-token": "n0faQedrepaqusu2uzur1chisijuqAxe",
-            "sec-ch-ua": '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"macOS"',
-        }
-
-        try:
-            response = requests.post(
-                "https://skyadmin.io/api/portalregistrations",
-                json=payload,
-                headers=headers,
-                timeout=10,
-            )
-
-            if response.status_code == 200:
-                print("Yale Club portal registration successful.")
-                # Wait a moment then check internet
-                time.sleep(3)
-                print("Checking internet...")
-                if check_internet():
-                    print("Yale Club login succeeded and internet is reachable.")
-                    return True
-                else:
-                    print("Registration succeeded but internet not reachable yet.")
-            else:
-                print(f"Yale Club portal registration failed: {response.status_code}")
-                print(f"Response: {response.text}")
-
-        except requests.RequestException as exc:
-            print(f"Yale Club login failed: {exc}")
-
-        return False
+    NSEID = "046064"
+    PROPERTY_ID = 6106
+    VLAN_ID = 20864
+    ENV_VAR = "YALE_ACCESS_CODE"
 
 
 def fail(msg, code=1):
