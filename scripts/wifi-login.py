@@ -4,7 +4,7 @@ import sys
 import time
 import subprocess
 import requests
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import urllib3
 from abc import ABC, abstractmethod
@@ -126,7 +126,7 @@ class Bodleian(WiFiNetwork):
             print("Initial request failed")
             return False
 
-        if not b"window.location" in resp.content:
+        if b"window.location" not in resp.content:
             print("HTTP 200 but no window.location")
             return False
 
@@ -421,10 +421,9 @@ def get_ip_address(interface="en0"):
 
 # Confirm that we have actual internet access
 def check_internet(timeout=3):
-    NEVERSSL_URL = "http://www.gstatic.com/generate_204"
     JS_REDIRECT = 'window.location="https://bodreader.bodleian.ox.ac.uk'
     try:
-        resp = requests.get(NEVERSSL_URL, timeout=timeout, allow_redirects=False)
+        resp = requests.get(GSTATIC_204, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
         # So we check for actual content.
         if JS_REDIRECT in resp.text:
