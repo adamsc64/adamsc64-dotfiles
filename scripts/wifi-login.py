@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import urllib3
 from abc import ABC, abstractmethod
-from inspect import isabstract
 
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 
@@ -16,8 +15,10 @@ GSTATIC_204 = "http://www.gstatic.com/generate_204"
 class WiFiNetwork(ABC):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        # Only enforce SSID requirement for concrete classes (non-abstract)
-        if not isabstract(cls) and (not hasattr(cls, "SSID") or cls.SSID is None):
+        # Skip SSID validation for intermediate base class
+        if cls.__name__ == "SkyAdminNetwork":
+            return
+        if not hasattr(cls, "SSID") or cls.SSID is None:
             raise TypeError(f"Class {cls.__name__} must define SSID class variable")
 
     @abstractmethod
@@ -195,7 +196,8 @@ class SkyAdminNetwork(WiFiNetwork):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        required = ["NSEID", "PROPERTY_ID", "VLAN_ID", "ENV_VAR"]
+        # SkyAdminNetwork subclasses must define all these fields including SSID
+        required = ["SSID", "NSEID", "PROPERTY_ID", "VLAN_ID", "ENV_VAR"]
         for attr in required:
             if not hasattr(cls, attr) or getattr(cls, attr) is None:
                 raise TypeError(
