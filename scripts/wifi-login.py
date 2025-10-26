@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import urllib3
 from abc import ABC, abstractmethod
 from typing import Optional, Any
+import hashlib
 
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 DEFAULT_TIMEOUT = 5
@@ -370,6 +371,167 @@ class YaleClub(SkyAdminNetwork):
     ENV_VAR = "YALE_ACCESS_CODE"
 
 
+class RandolphOxford(WiFiNetwork):
+    SSID = "Randolph_Guest"
+
+    def get_credentials(self):
+        return super().get_credentials()
+
+    def _compute_chap_password(self, chap_id, chap_challenge, password=""):
+        """
+        Compute CHAP password response using MD5
+        CHAP-Password = MD5(chap-id + password + chap-challenge)
+
+        For guest networks with no password, use empty string
+        """
+        # chap_id and chap_challenge come as escaped strings from HTML
+        # Need to decode them to bytes
+        try:
+            # Handle escape sequences in the challenge
+            chap_id_bytes = (
+                chap_id.encode("utf-8").decode("unicode_escape").encode("latin1")
+            )
+            chap_challenge_bytes = (
+                chap_challenge.encode("utf-8").decode("unicode_escape").encode("latin1")
+            )
+        except:
+            # If decoding fails, try as-is
+            chap_id_bytes = chap_id.encode("latin1")
+            chap_challenge_bytes = chap_challenge.encode("latin1")
+
+        password_bytes = password.encode("utf-8")
+
+        # Compute MD5(chap-id + password + chap-challenge)
+        md5_hash = hashlib.md5()
+        md5_hash.update(chap_id_bytes)
+        md5_hash.update(password_bytes)
+        md5_hash.update(chap_challenge_bytes)
+
+        # Return hex digest
+        return md5_hash.hexdigest()
+
+    def _find_and_submit_form(self, session, resp, saved_chap_secret=None):
+        """Parse HTML response for a form and submit it using the appropriate HTTP method
+
+        Returns: (response, chap_secret) tuple
+        """
+        bs = BeautifulSoup(resp.content, "html.parser")
+        print(f"soup: {bs}")
+        form = bs.find("form")
+        if not form:
+            print("Could not find form")
+            return None, None
+
+        # Look for the CHAP secret in JavaScript (Mikrotik pattern)
+        chap_secret = None
+        scripts = bs.find_all("script", type="text/javascript")
+        for script in scripts:
+            if script.string and "hexMD5" in script.string:
+                # Extract the secret from: hexMD5('\006' + 'SECRET'+ '\112...')
+                import re
+
+                match = re.search(
+                    r"hexMD5\(['\"]\\[0-9]{3}['\"] \+ ['\"]([\w]+)['\"]", script.string
+                )
+                if match:
+                    chap_secret = match.group(1)
+                    print(f"🔑 Found CHAP secret: {chap_secret}")
+                    break
+
+        # Extract all form data
+        form_data = {}
+        has_chap_challenge = False
+
+        for input_tag in form.find_all("input"):
+            name = input_tag.get("name", "")
+            value = input_tag.get("value", "")
+            if name:
+                form_data[name] = value
+                print(f"Key: {name} Value: {value}")
+                if name == "chap-challenge":
+                    has_chap_challenge = True
+
+        action = form.get("action")
+        print(f"Action: {action}")
+        if not action:
+            print("Form action URL not found")
+            return None, None
+
+        method = form.get("method", "get").lower()
+
+        # If this form has CHAP challenge AND a user token, authenticate
+        if has_chap_challenge and form_data.get("user"):
+            print("🔐 CHAP challenge with user token detected - computing response...")
+            # Use the saved secret from previous form, or current one if available
+            secret_to_use = saved_chap_secret or chap_secret or ""
+            chap_password = self._compute_chap_password(
+                form_data["chap-id"],
+                form_data["chap-challenge"],
+                password=secret_to_use,
+            )
+
+            # For Mikrotik, we need to POST to the uamip login endpoint with username and chap-password
+            login_url = f"http://{form_data.get('uamip', '172.20.0.1:80')}/login"
+            login_data = {
+                "username": form_data.get("user", ""),
+                "password": chap_password,  # Use computed CHAP password
+                "dst": form_data.get("userurl", ""),
+                "popup": "true",
+            }
+            print(f"Using CHAP secret: {secret_to_use}")
+            print(f"Computed CHAP password: {chap_password}")
+            print(f"Submitting CHAP authentication to {login_url} via POST...")
+            return session.post(login_url, data=login_data), chap_secret
+
+        # If CHAP challenge but NO user token, need to get token first
+        if has_chap_challenge and not form_data.get("user"):
+            print(
+                "⏭️  CHAP challenge without user token - submitting to get token first..."
+            )
+
+        # Regular form submission
+        print(f"Submitting form via {method.upper()}...")
+        if method == "post":
+            return session.post(action, data=form_data), chap_secret
+        else:
+            return session.get(action, params=form_data), chap_secret
+
+    def login(self):
+        """Handle login for Randolph_Guest network"""
+        print("Attempting to log in to the Randolph_Guest captive portal...")
+        session = requests.Session()
+
+        # Initial request to captive portal
+        resp = session.get(GSTATIC_204)
+        if resp.status_code != 200:
+            print("Initial request failed")
+            return False
+
+        # Keep submitting forms until no more forms are found
+        form_count = 0
+        chap_secret = None  # Store CHAP secret for later use
+
+        while True:
+            form_count += 1
+            print(f"Processing form {form_count}...")
+            resp, new_secret = self._find_and_submit_form(session, resp, chap_secret)
+            if resp is None:
+                # No more forms found
+                print(f"No more forms found after {form_count - 1} form(s)")
+                break
+            # Update CHAP secret if one was discovered
+            if new_secret:
+                chap_secret = new_secret
+
+        # Check if we have internet now
+        if check_internet():
+            print("✅ Successfully authenticated and internet is accessible!")
+            return True
+
+        print("❌ Authentication completed but internet not accessible")
+        return False
+
+
 def fail(msg, code=1):
     print(f"Error: {msg}", file=sys.stderr)
     sys.exit(code)
@@ -459,6 +621,7 @@ def main():
         Bodleian.SSID: Bodleian,
         HarvardClub.SSID: HarvardClub,
         YaleClub.SSID: YaleClub,
+        RandolphOxford.SSID: RandolphOxford,
     }
 
     klass = networks.get(ssid)
