@@ -8,8 +8,45 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import urllib3
 from abc import ABC, abstractmethod
+from typing import Optional, Any
 
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
+DEFAULT_TIMEOUT = 5
+
+
+def safe_request(
+    method: str,
+    url: str,
+    session: Optional[requests.Session] = None,
+    error_msg: Optional[str] = None,
+    **kwargs: Any,
+) -> Optional[requests.Response]:
+    """
+    Wrapper for requests/session get/post with consistent error handling.
+    """
+    kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
+    kwargs.setdefault("verify", False)  # mirrors -k
+
+    try:
+        requester = session if session else requests
+        if method.lower() == "get":
+            return requester.get(url, **kwargs)
+        elif method.lower() == "post":
+            return requester.post(url, **kwargs)
+        else:
+            raise ValueError(f"Unsupported method: {method}")
+    except requests.RequestException as exc:
+        prefix = error_msg if error_msg else "Request failed"
+        print(f"{prefix}: {exc}")
+        return None
+
+
+def safe_get(*args, **kwargs) -> Optional[requests.Response]:
+    return safe_request("get", *args, **kwargs)
+
+
+def safe_post(*args, **kwargs) -> Optional[requests.Response]:
+    return safe_request("post", *args, **kwargs)
 
 
 class WiFiNetwork(ABC):
@@ -58,22 +95,21 @@ class Owl(WiFiNetwork):
 
         session = requests.Session()
         print(f"Login attempt...")
-        try:
-            resp = session.post(
-                LOGIN_URL,
-                data={
-                    "auth_user": credentials["auth_user"],
-                    "auth_pass": credentials["auth_pass"],
-                    "accept": "Continue",
-                    "redirurl": "http://www.gstatic.com/generate_204",
-                    "zone": "tawny_owl",
-                },
-                timeout=5,
-                verify=False,  # mirrors -k
-            )
-        except requests.RequestException as exc:
-            print("Login POST failed or timed out.")
+        resp = safe_post(
+            LOGIN_URL,
+            session=session,
+            error_msg="Login POST failed or timed out",
+            data={
+                "auth_user": credentials["auth_user"],
+                "auth_pass": credentials["auth_pass"],
+                "accept": "Continue",
+                "redirurl": "http://www.gstatic.com/generate_204",
+                "zone": "tawny_owl",
+            },
+        )
+        if not resp:
             return False
+
         if check_internet():
             print("Login succeeded and internet is reachable.")
             return True
@@ -117,7 +153,15 @@ class Bodleian(WiFiNetwork):
     def make_attempt(self, session, credentials):
         # Step 1: Make request to generate_204 to get redirect
         print("Making initial request to detect captive portal...")
-        resp = session.get(GSTATIC_204, timeout=10, allow_redirects=False)
+        resp = safe_get(
+            GSTATIC_204,
+            session=session,
+            error_msg="Initial request failed",
+            allow_redirects=False,
+        )
+        if not resp:
+            return False
+
         if resp.status_code == 204:
             print("No captive portal detected; internet is accessible.")
             return True  # Already have internet
@@ -140,7 +184,13 @@ class Bodleian(WiFiNetwork):
             return False
 
         print(f"Following redirect to: {redirect_url}")
-        resp = session.get(redirect_url, timeout=10)
+        resp = safe_get(
+            redirect_url,
+            session=session,
+            error_msg="Failed to follow redirect",
+        )
+        if not resp:
+            return False
 
         # Step 3: Parse the form to extract hidden values
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -173,7 +223,15 @@ class Bodleian(WiFiNetwork):
         else:
             submit_url = action
 
-        resp = session.post(submit_url, data=form_data, timeout=10)
+        resp = safe_post(
+            submit_url,
+            session=session,
+            error_msg="Failed to submit form",
+            data=form_data,
+        )
+        if not resp:
+            return False
+
         print("Form submitted, waiting to verify internet access...")
         time.sleep(5)
 
