@@ -1,16 +1,48 @@
 #!/bin/bash
 set -Eeu -o pipefail
-# An easy way to search for a file, either using the ``find`` command,
-# or just grepping index.txt if it exists.
-if [[ -f index.txt ]];
-then
-    # If you want to treat all the arguments as a single search
-    # pattern, you can use "$*" instead of "$@". This will
-    # concatenate all the arguments into a single string, with
-    # the first character of the internal field separator (IFS)
-    # variable between them. By default, the IFS is a space, so this
-    # will concatenate all the arguments with spaces in between.
-    cat index.txt | grep -i "$*"
-else
-    find . | grep -i "$*"
+# Fast file search using macOS Spotlight (mdfind).
+# Spotlight maintains its own index automatically, so no need for manual index files!
+
+show_help() {
+    cat << EOF
+Usage: f <search pattern>
+
+Fast file search using macOS Spotlight (mdfind).
+Searches for files containing the pattern anywhere in their filename.
+
+Arguments:
+  search pattern    Text to search for in filenames (case-sensitive)
+
+Options:
+  -h, --help       Show this help message
+
+Examples:
+  f foo.txt          # Find files with "foo.txt" in the name
+  f .py              # Find all files containing ".py" (e.g., test.py, script.py)
+  f test             # Find files with "test" anywhere in the name
+
+Note:
+  - Uses Spotlight's index which is always up-to-date
+  - Much faster than traditional 'find' commands
+  - Performs case-sensitive substring matching on filenames
+  - Searches only in current directory and subdirectories
+EOF
+}
+
+# Check for help flag
+if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
+    show_help
+    exit 0
 fi
+
+search_pattern="$*"
+
+if [[ -z "$search_pattern" ]]; then
+    show_help >&2
+    exit 1
+fi
+
+# Use mdfind (Spotlight) - fast and always up-to-date
+# -onlyin restricts search to current directory and subdirectories
+# kMDItemFSName queries the filename metadata with wildcard pattern matching
+mdfind -onlyin . "kMDItemFSName == '*${search_pattern}*'" 2>/dev/null
