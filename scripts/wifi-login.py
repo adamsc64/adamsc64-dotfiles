@@ -375,7 +375,8 @@ class RandolphOxford(WiFiNetwork):
     SSID = "Randolph_Guest"
 
     def get_credentials(self):
-        return super().get_credentials()
+        # Guest network - no credentials needed
+        return {}
 
     def _compute_chap_password(self, chap_id, chap_challenge, password=""):
         """
@@ -416,10 +417,8 @@ class RandolphOxford(WiFiNetwork):
         Returns: (response, chap_secret) tuple
         """
         bs = BeautifulSoup(resp.content, "html.parser")
-        print(f"soup: {bs}")
         form = bs.find("form")
         if not form:
-            print("Could not find form")
             return None, None
 
         # Look for the CHAP secret in JavaScript (Mikrotik pattern)
@@ -427,7 +426,6 @@ class RandolphOxford(WiFiNetwork):
         scripts = bs.find_all("script", type="text/javascript")
         for script in scripts:
             if script.string and "hexMD5" in script.string:
-                # Extract the secret from: hexMD5('\006' + 'SECRET'+ '\112...')
                 import re
 
                 match = re.search(
@@ -435,7 +433,6 @@ class RandolphOxford(WiFiNetwork):
                 )
                 if match:
                     chap_secret = match.group(1)
-                    print(f"🔑 Found CHAP secret: {chap_secret}")
                     break
 
         # Extract all form data
@@ -447,22 +444,33 @@ class RandolphOxford(WiFiNetwork):
             value = input_tag.get("value", "")
             if name:
                 form_data[name] = value
-                print(f"Key: {name} Value: {value}")
                 if name == "chap-challenge":
                     has_chap_challenge = True
 
         action = form.get("action")
-        print(f"Action: {action}")
-        if not action:
-            print("Form action URL not found")
-            return None, None
-
         method = form.get("method", "get").lower()
 
-        # If this form has CHAP challenge AND a user token, authenticate
+        if not action:
+            return None, None
+
+        # Check if this is the JavaScript auto-submit form (has username, password, dst)
+        # This form doesn't have chap-id/chap-challenge - those are in redirect forms
+        # We just pass it through since we can't execute JavaScript
+        if (
+            form_data.get("username")
+            and "password" in form_data
+            and form_data.get("dst")
+            and chap_secret
+            and not has_chap_challenge
+        ):
+            # Submit as-is; the next redirect form will handle authentication
+            if method == "post":
+                return session.post(action, data=form_data), chap_secret
+            else:
+                return session.get(action, params=form_data), chap_secret
+
+        # If this form has CHAP challenge AND a user token (redirect form), authenticate
         if has_chap_challenge and form_data.get("user"):
-            print("🔐 CHAP challenge with user token detected - computing response...")
-            # Use the saved secret from previous form, or current one if available
             secret_to_use = saved_chap_secret or chap_secret or ""
             chap_password = self._compute_chap_password(
                 form_data["chap-id"],
@@ -470,27 +478,17 @@ class RandolphOxford(WiFiNetwork):
                 password=secret_to_use,
             )
 
-            # For Mikrotik, we need to POST to the uamip login endpoint with username and chap-password
+            # For Mikrotik, POST to the uamip login endpoint with username and chap-password
             login_url = f"http://{form_data.get('uamip', '172.20.0.1:80')}/login"
             login_data = {
                 "username": form_data.get("user", ""),
-                "password": chap_password,  # Use computed CHAP password
+                "password": chap_password,
                 "dst": form_data.get("userurl", ""),
                 "popup": "true",
             }
-            print(f"Using CHAP secret: {secret_to_use}")
-            print(f"Computed CHAP password: {chap_password}")
-            print(f"Submitting CHAP authentication to {login_url} via POST...")
             return session.post(login_url, data=login_data), chap_secret
 
-        # If CHAP challenge but NO user token, need to get token first
-        if has_chap_challenge and not form_data.get("user"):
-            print(
-                "⏭️  CHAP challenge without user token - submitting to get token first..."
-            )
-
-        # Regular form submission
-        print(f"Submitting form via {method.upper()}...")
+        # Regular form submission (initial redirect forms without user token)
         if method == "post":
             return session.post(action, data=form_data), chap_secret
         else:
@@ -507,28 +505,40 @@ class RandolphOxford(WiFiNetwork):
             print("Initial request failed")
             return False
 
-        # Keep submitting forms until no more forms are found
+        # Process forms until authentication completes or no more forms found
         form_count = 0
-        chap_secret = None  # Store CHAP secret for later use
+        chap_secret = None
+        max_forms = 10
+        consecutive_errors = 0
 
-        while True:
+        while form_count < max_forms:
             form_count += 1
-            print(f"Processing form {form_count}...")
+
             resp, new_secret = self._find_and_submit_form(session, resp, chap_secret)
+
             if resp is None:
                 # No more forms found
-                print(f"No more forms found after {form_count - 1} form(s)")
                 break
-            # Update CHAP secret if one was discovered
+
+            # Update CHAP secret if discovered
             if new_secret:
                 chap_secret = new_secret
 
-        # Check if we have internet now
+            # Check for repeated authentication errors
+            if b"ERROR Incorrect password" in resp.content:
+                consecutive_errors += 1
+                if consecutive_errors >= 3:
+                    print("Authentication failed after multiple attempts")
+                    break
+            else:
+                consecutive_errors = 0
+
+        # Verify internet access
         if check_internet():
-            print("✅ Successfully authenticated and internet is accessible!")
+            print("Successfully authenticated!")
             return True
 
-        print("❌ Authentication completed but internet not accessible")
+        print("Authentication completed but internet not accessible")
         return False
 
 
