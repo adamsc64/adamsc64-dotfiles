@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
+import hashlib
 import os
+import re
+import subprocess
 import sys
 import time
-import subprocess
-import requests
-from urllib.parse import urlparse
-from bs4 import BeautifulSoup
-import urllib3
 from abc import ABC, abstractmethod
-from typing import Optional, Any
-import hashlib
+from typing import Any, Optional
+from urllib.parse import urlparse
+
+import requests
+import urllib3
+from bs4 import BeautifulSoup
 
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 DEFAULT_TIMEOUT = 5
@@ -375,8 +377,10 @@ class RandolphOxford(WiFiNetwork):
     SSID = "Randolph_Guest"
 
     def get_credentials(self):
-        # Guest network - no credentials needed
-        return {}
+        email = os.getenv("RANDOLPH_EMAIL")
+        if not email:
+            fail("RANDOLPH_EMAIL environment variable must be set.")
+        return {"email": email}
 
     def _compute_chap_password(self, chap_id, chap_challenge, password=""):
         """
@@ -416,9 +420,22 @@ class RandolphOxford(WiFiNetwork):
 
         Returns: (response, chap_secret) tuple
         """
+        print(f"  Response URL: {resp.url}, Status: {resp.status_code}")
+
         bs = BeautifulSoup(resp.content, "html.parser")
+
+        # Check if we've reached a success page
+        if b"You are logged in" in resp.content or b"logged in" in resp.content.lower():
+            print("  Success page detected - authentication complete")
+            return None, None
+
         form = bs.find("form")
         if not form:
+            print("  No form found in response")
+            # Print page title for debugging
+            title = bs.find("title")
+            if title:
+                print(f"  Page title: {title.get_text().strip()}")
             return None, None
 
         # Look for the CHAP secret in JavaScript (Mikrotik pattern)
@@ -426,13 +443,12 @@ class RandolphOxford(WiFiNetwork):
         scripts = bs.find_all("script", type="text/javascript")
         for script in scripts:
             if script.string and "hexMD5" in script.string:
-                import re
-
                 match = re.search(
                     r"hexMD5\(['\"]\\[0-9]{3}['\"] \+ ['\"]([\w]+)['\"]", script.string
                 )
                 if match:
                     chap_secret = match.group(1)
+                    print(f"  Found CHAP secret in JavaScript")
                     break
 
         # Extract all form data
@@ -450,8 +466,19 @@ class RandolphOxford(WiFiNetwork):
         action = form.get("action")
         method = form.get("method", "get").lower()
 
+        # If no action, submit to current URL (common pattern)
         if not action:
-            return None, None
+            action = resp.url
+            print(f"  No form action found, using current URL: {action}")
+
+        # Check if this is an email input form that we need to fill
+        email_input = form.find("input", attrs={"name": "email"}) or form.find(
+            "input", attrs={"type": "email"}
+        )
+        if email_input and not form_data.get("email"):
+            print("  Email form detected - filling in email address")
+            credentials = self.get_credentials()
+            form_data["email"] = credentials["email"]
 
         # Check if this is the JavaScript auto-submit form (has username, password, dst)
         # This form doesn't have chap-id/chap-challenge - those are in redirect forms
@@ -463,6 +490,7 @@ class RandolphOxford(WiFiNetwork):
             and chap_secret
             and not has_chap_challenge
         ):
+            print(f"  JS auto-submit form detected, passing through")
             # Submit as-is; the next redirect form will handle authentication
             if method == "post":
                 return session.post(action, data=form_data), chap_secret
@@ -471,6 +499,7 @@ class RandolphOxford(WiFiNetwork):
 
         # If this form has CHAP challenge AND a user token (redirect form), authenticate
         if has_chap_challenge and form_data.get("user"):
+            print(f"  CHAP authentication form detected")
             secret_to_use = saved_chap_secret or chap_secret or ""
             chap_password = self._compute_chap_password(
                 form_data["chap-id"],
@@ -486,9 +515,19 @@ class RandolphOxford(WiFiNetwork):
                 "dst": form_data.get("userurl", ""),
                 "popup": "true",
             }
-            return session.post(login_url, data=login_data), chap_secret
+            print(f"  Submitting CHAP auth to {login_url}")
+            result = session.post(login_url, data=login_data)
+
+            # Check for errors
+            if b"ERROR" in result.content:
+                error_match = re.search(b'value="([^"]*ERROR[^"]*)"', result.content)
+                if error_match:
+                    print(f"  ⚠️  Server error: {error_match.group(1).decode()}")
+
+            return result, chap_secret
 
         # Regular form submission (initial redirect forms without user token)
+        print(f"  Regular form submission via {method.upper()}")
         if method == "post":
             return session.post(action, data=form_data), chap_secret
         else:
@@ -505,6 +544,8 @@ class RandolphOxford(WiFiNetwork):
             print("Initial request failed")
             return False
 
+        print(f"Initial response redirected to: {resp.url}")
+
         # Process forms until authentication completes or no more forms found
         form_count = 0
         chap_secret = None
@@ -513,11 +554,13 @@ class RandolphOxford(WiFiNetwork):
 
         while form_count < max_forms:
             form_count += 1
+            print(f"Processing form {form_count}...")
 
             resp, new_secret = self._find_and_submit_form(session, resp, chap_secret)
 
             if resp is None:
                 # No more forms found
+                print(f"No more forms found after {form_count - 1} form(s)")
                 break
 
             # Update CHAP secret if discovered
@@ -534,11 +577,13 @@ class RandolphOxford(WiFiNetwork):
                 consecutive_errors = 0
 
         # Verify internet access
+        print("Checking internet access...")
         if check_internet():
             print("Successfully authenticated!")
             return True
 
         print("Authentication completed but internet not accessible")
+        print(f"Final URL was: {resp.url if resp else 'None'}")
         return False
 
 
