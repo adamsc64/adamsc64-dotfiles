@@ -592,17 +592,73 @@ def fail(msg, code=1):
     sys.exit(code)
 
 
-def get_ssid():
+def _get_ssid_from_networksetup():
+    """Try to get SSID using networksetup (deprecated but fast, no sudo)."""
     try:
         out = subprocess.check_output(
             ["/usr/sbin/networksetup", "-getairportnetwork", "en0"],
             text=True,
             stderr=subprocess.DEVNULL,
         )
-        # Expected: "Current Wi-Fi Network: OWL"
-        return out.split(": ", 1)[1].strip()
-    except Exception:  # intentional broad catch
-        return ""
+        # Check if we're not connected
+        if "You are not associated" in out or "not associated" in out.lower():
+            return None
+        # Try to parse the SSID
+        parts = out.split(": ", 1)
+        if len(parts) == 2:
+            ssid = parts[1].strip()
+            if ssid:
+                return ssid
+    except Exception:
+        pass
+    return None
+
+
+def _get_ssid_from_ipconfig():
+    """Try to get SSID using ipconfig (requires sudo but reliable on modern macOS)."""
+    try:
+        # First enable verbose mode
+        subprocess.run(
+            ["sudo", "ipconfig", "setverbose", "1"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        # Get summary and extract SSID
+        out = subprocess.check_output(
+            ["sudo", "ipconfig", "getsummary", "en0"],
+            text=True,
+            stderr=subprocess.PIPE,
+        )
+        for line in out.split("\n"):
+            line = line.strip()
+            if line.startswith("SSID"):
+                # Line format: " SSID : NetworkName"
+                parts = line.split(":", 1)
+                if len(parts) == 2:
+                    ssid = parts[1].strip()
+                    print(f"  Found SSID from ipconfig: {ssid}")
+                    return ssid
+    except Exception as e:
+        print(f"  ipconfig method failed: {e}")
+    print("  ipconfig method failed to get SSID")
+    return None
+
+
+def get_ssid():
+    """
+    Get the current Wi-Fi SSID. First tries networksetup (fast but deprecated),
+    then falls back to ipconfig if networksetup fails or returns "not associated".
+    """
+    # Try networksetup first (fast, no sudo required)
+    ssid = _get_ssid_from_networksetup()
+    if ssid:
+        return ssid
+    # Fallback to ipconfig (requires sudo but more reliable on modern macOS)
+    ssid = _get_ssid_from_ipconfig()
+    if ssid:
+        return ssid
+    return ""
 
 
 def get_mac_address(interface="en0"):
