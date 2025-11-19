@@ -164,5 +164,17 @@ if command -v rbenv 1>/dev/null 2>&1; then
   eval "$(rbenv init - zsh)"
 fi
 
+# fzf key bindings
+if command -v brew >/dev/null 2>&1; then
+    FZF_KEY_BINDINGS="$(brew --prefix)/opt/fzf/shell/key-bindings.zsh"
+    if [ -f "$FZF_KEY_BINDINGS" ]; then
+        source "$FZF_KEY_BINDINGS"
+    else
+        echo "fzf key bindings not found at $FZF_KEY_BINDINGS"
+    fi
+else
+    echo "brew is not installed, skipping fzf key bindings"
+fi
+
 # Source local configuration if it exists
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
