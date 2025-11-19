@@ -5,19 +5,36 @@ function getProfile() {
 }
 
 function getAllMessages() {
-    const messages = document.querySelectorAll('.message');
-    return [...messages].map(m => {
-        // Determine color (sender)
-        const isIn = m.classList.contains('message--in');
-        const isOut = m.classList.contains('message--out');
-        // Get the first span inside
-        const span = m.querySelector('span');
-        const text = span ? span.textContent.trim() : '';
-        return {
-            type: isIn ? 'in' : isOut ? 'out' : 'unknown',
-            text
-        };
-    });
+    const conversationDiv = document.querySelector('.messages-list__conversation');
+    if (!conversationDiv) return [];
+
+    const result = [];
+    let currentDate = null;
+
+    // Iterate through all children to capture date groups and messages
+    for (const child of conversationDiv.children) {
+        if (child.classList.contains('message-group-date')) {
+            // Extract the date text
+            const dateDiv = child.querySelector('.p-3');
+            currentDate = dateDiv ? dateDiv.textContent.trim().replace(/\u00A0/g, ' ') : null;
+        } else if (child.classList.contains('message')) {
+            // Determine message type
+            const isIn = child.classList.contains('message--in');
+            const isOut = child.classList.contains('message--out');
+
+            // Get the message text
+            const span = child.querySelector('span');
+            const text = span ? span.textContent.trim() : '';
+
+            result.push({
+                type: isIn ? 'in' : isOut ? 'out' : 'unknown',
+                text,
+                date: currentDate
+            });
+        }
+    }
+
+    return result;
 }
 
 function getAllData() {
@@ -41,7 +58,16 @@ function getHumanReadable() {
     // Add messages section
     if (data.messages && data.messages.length > 0) {
         lines.push('=== MESSAGES ===');
+        let lastDate = null;
+
         data.messages.forEach(msg => {
+            // Add date header when it changes
+            if (msg.date && msg.date !== lastDate) {
+                lines.push('');
+                lines.push(`--- ${msg.date} ---`);
+                lastDate = msg.date;
+            }
+
             const prefix = msg.type === 'in' ? 'her <<' : msg.type === 'out' ? ' me >>' : '??';
             lines.push(`${prefix} ${msg.text}`);
         });
