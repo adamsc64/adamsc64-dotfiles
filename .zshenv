@@ -23,3 +23,4 @@ function set-paths() {
 set-paths
 
 [ -f "$HOME/.zshenv.local" ] && source "$HOME/.zshenv.local"
+export PYTHONDONTWRITEBYTECODE=1
