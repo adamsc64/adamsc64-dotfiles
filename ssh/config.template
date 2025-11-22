@@ -1,0 +1,40 @@
+# =============================================================================
+# Global SSH Configuration
+# =============================================================================
+
+Host *
+    UseKeychain yes
+    AddKeysToAgent yes
+    IdentityFile ~/.ssh/id_rsa
+    ServerAliveInterval 60
+
+# =============================================================================
+# AWS EC2 Instances
+# =============================================================================
+
+# Yellow Tiger - Primary Server
+# Instance: op://Personal/SSH-YellowTiger/instance_id
+Host server yellowtiger
+    HostName op://Personal/SSH-YellowTiger/hostname
+    User op://Personal/SSH-YellowTiger/username
+    IdentityFile ~/.ssh/keys/yellowtiger.pem
+    ForwardAgent yes
+
+# New Haven List
+# Instance: op://Personal/SSH-NewHavenList/instance_id
+# Region: op://Personal/SSH-NewHavenList/region
+Host newhavenlist nhl
+    HostName op://Personal/SSH-NewHavenList/hostname
+    User op://Personal/SSH-NewHavenList/username
+    IdentityFile ~/.ssh/keys/newhavenlist.pem
+    ForwardAgent yes
+
+# =============================================================================
+# Other Services
+# =============================================================================
+
+# Mags Hosting
+Host mags
+    HostName op://Personal/SSH-Mags/hostname
+    User op://Personal/SSH-Mags/username
+    HostKeyAlgorithms ssh-rsa
