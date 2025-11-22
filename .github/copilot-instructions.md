@@ -6,4 +6,5 @@
 
 ## Python Development
 
+- Always run `isort` formatter on Python files after making changes to ensure consistent code formatting.
 - Always run `black` formatter on Python files after making changes to ensure consistent code formatting.

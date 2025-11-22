@@ -7,13 +7,10 @@ Suggested installation of yt-dlp:
 """
 import argparse
 import atexit
-import json
+import os
 import re
 import shutil
 import subprocess
-import os
-import shutil
-
 
 TMP_RAW_ORIGINAL = "/tmp/youtube-audio-cut-{}.original.mp3".format(os.getpid())
 TMP_CUT = "/tmp/youtube-audio-cut-{}.cut.mp3".format(os.getpid())
@@ -28,21 +25,28 @@ def cleanup():
     if os.path.exists(TMP_CUT):
         os.remove(TMP_CUT)
 
+
 atexit.register(cleanup)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Download and cut YouTube audio.")
     parser.add_argument("url", help="YouTube URL", type=validate_url)
-    parser.add_argument("-s", "--start_time", help="Start time in HH:MM:SS format", default=None)
-    parser.add_argument("-e", "--end_time", help="End time in HH:MM:SS format", default=None)
+    parser.add_argument(
+        "-s", "--start_time", help="Start time in HH:MM:SS format", default=None
+    )
+    parser.add_argument(
+        "-e", "--end_time", help="End time in HH:MM:SS format", default=None
+    )
     parser.add_argument("-o", "--output", help="Output file path", default=None)
 
     args = parser.parse_args()
 
     failing_prereq = is_any_failing_prereq()
     if failing_prereq:
-        print(f"Please install the following prerequisite before running this script: {failing_prereq}")
+        print(
+            f"Please install the following prerequisite before running this script: {failing_prereq}"
+        )
         exit(1)
 
     video_title = get_video_title(args.url)
@@ -69,7 +73,7 @@ def main():
 def validate_url(url):
     # Simple regex to check if the URL is a valid YouTube URL
     youtube_regex = re.compile(
-        r'^(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/.+$'
+        r"^(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/.+$"
     )
     if not youtube_regex.match(url):
         raise argparse.ArgumentTypeError(f"Invalid YouTube URL: {url}")
@@ -91,7 +95,7 @@ def get_video_title(url):
             ["yt-dlp", "--print", "title", "--no-warnings", url],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError:
@@ -103,11 +107,11 @@ def sanitize_filename(filename):
     """Sanitize filename to be filesystem-safe."""
     # Remove or replace characters that are problematic in filenames
     # Replace multiple spaces with single space
-    filename = re.sub(r'\s+', ' ', filename)
+    filename = re.sub(r"\s+", " ", filename)
     # Remove or replace invalid characters
-    filename = re.sub(r'[<>:"/\\|?*]', '', filename)
+    filename = re.sub(r'[<>:"/\\|?*]', "", filename)
     # Remove leading/trailing spaces and dots
-    filename = filename.strip('. ')
+    filename = filename.strip(". ")
     # Limit length to avoid filesystem issues
     if len(filename) > 200:
         filename = filename[:200]
