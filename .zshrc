@@ -178,3 +178,5 @@ fi
 
 # Source local configuration if it exists
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"

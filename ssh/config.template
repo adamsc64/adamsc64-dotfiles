@@ -14,7 +14,7 @@ Host *
 
 # Yellow Tiger - Primary Server
 # Instance: op://Personal/SSH-YellowTiger/instance_id
-Host server yellowtiger
+Host server yellowtiger sayitagain
     HostName op://Personal/SSH-YellowTiger/hostname
     User op://Personal/SSH-YellowTiger/username
     IdentityFile ~/.ssh/keys/yellowtiger.pem
