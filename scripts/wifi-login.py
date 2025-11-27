@@ -12,9 +12,18 @@ from urllib.parse import urlparse
 import requests
 import urllib3
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
 GSTATIC_204 = "http://www.gstatic.com/generate_204"
 DEFAULT_TIMEOUT = 5
+
+# Global Chrome driver (initialized once at startup)
+_chrome_driver = None
 
 
 def safe_request(
@@ -143,107 +152,98 @@ class Bodleian(WiFiNetwork):
         return True
 
     def login_bodleian_portal(self, credentials):
-        """Login to Bodleian Reader WiFi network"""
-        session = requests.Session()
-        print(f"Bodleian login attempt...")
+        """Login to Bodleian Reader WiFi network using Selenium"""
+        global _chrome_driver
+
         try:
-            if self.make_attempt(session, credentials):
-                return True
-        except ConnectionError:
-            print("Connection error during attempt.")
-        return False
+            driver = init_chrome_driver()
+            if not driver:
+                print("ERROR: Failed to initialize Chrome driver")
+                return False
 
-    def make_attempt(self, session, credentials):
-        # Step 1: Make request to generate_204 to get redirect
-        print("Making initial request to detect captive portal...")
-        resp = safe_get(
-            GSTATIC_204,
-            session=session,
-            error_msg="Initial request failed",
-            allow_redirects=False,
-        )
-        if not resp:
+            driver.get(GSTATIC_204)
+
+            # Wait for redirect to captive portal
+            def wait_for_bodleian(d):
+                return "bodreader.bodleian.ox.ac.uk" in d.current_url
+
+            WebDriverWait(driver, 10).until(wait_for_bodleian)
+
+            # Check page source for login form
+            page_source = driver.page_source
+
+            if "form" in page_source.lower():
+                # Parse the form with BeautifulSoup
+                soup = BeautifulSoup(page_source, "html.parser")
+                form = soup.find("form")
+
+                if form:
+                    # Find the form fields
+                    username_input = None
+                    password_input = None
+
+                    for input_tag in form.find_all("input"):
+                        name = input_tag.get("name", "").lower()
+                        input_type = input_tag.get("type", "").lower()
+
+                        if input_type == "text" and any(
+                            x in name for x in ["username", "user", "login", "email"]
+                        ):
+                            username_input = input_tag.get("name")
+                        elif input_type == "password":
+                            password_input = input_tag.get("name")
+
+                    # Fill form fields using Selenium
+                    username = credentials.get("username", "")
+                    password = credentials.get("password", "")
+
+                    if username_input and username:
+                        elem = driver.find_element(By.NAME, username_input)
+                        elem.clear()
+                        elem.send_keys(username)
+
+                    if password_input and password:
+                        elem = driver.find_element(By.NAME, password_input)
+                        elem.clear()
+                        elem.send_keys(password)
+
+                    # Find and click the submit button
+                    submit_button = form.find(
+                        "button", {"type": "submit"}
+                    ) or form.find("input", {"type": "submit"})
+                    if submit_button:
+                        try:
+                            selenium_button = (
+                                driver.find_element(
+                                    By.CSS_SELECTOR,
+                                    "button[type='submit'], input[type='submit']",
+                                )
+                                if not submit_button.get("name")
+                                else driver.find_element(
+                                    By.NAME, submit_button.get("name")
+                                )
+                            )
+                            selenium_button.click()
+                        except Exception as e:
+                            print(f"ERROR clicking submit button: {e}")
+                            return False
+                    else:
+                        print("ERROR: No submit button found")
+                        return False
+
+                    # Wait for page change
+                    time.sleep(3)
+                    return True
+                else:
+                    print("ERROR: Could not find form element")
+                    return False
+            else:
+                print("ERROR: No login form detected on page")
+                return False
+
+        except Exception as e:
+            print(f"ERROR: {type(e).__name__}: {e}")
             return False
-
-        if resp.status_code == 204:
-            print("No captive portal detected; internet is accessible.")
-            return True  # Already have internet
-        if resp.status_code != 200:
-            print("Initial request failed")
-            return False
-
-        if b"window.location" not in resp.content:
-            print("HTTP 200 but no window.location")
-            return False
-
-        print("Redirect detected")
-        tokenized_url = resp.content.split(b"window.location=")[1].split(b";")[0]
-        redirect_url = tokenized_url.decode("utf-8")
-        redirect_url = redirect_url.strip('"')
-        print(f"Redirecting to: {redirect_url}")
-
-        # Step 2: Follow redirect to get auth form
-        if not redirect_url:
-            return False
-
-        print(f"Following redirect to: {redirect_url}")
-        resp = safe_get(
-            redirect_url,
-            session=session,
-            error_msg="Failed to follow redirect",
-        )
-        if not resp:
-            return False
-
-        # Step 3: Parse the form to extract hidden values
-        soup = BeautifulSoup(resp.text, "html.parser")
-        form = soup.find("form", {"method": "post"})
-
-        if not form:
-            print("Could not find login form")
-            return False
-
-        # Extract hidden form values
-        form_data = {}
-        for input_tag in form.find_all("input", type="hidden"):
-            name = input_tag.get("name", "")
-            value = input_tag.get("value", "")
-            if name:  # Only add if name is not empty
-                form_data[name] = value
-
-        # Add username and password
-        form_data["username"] = credentials["username"]
-        form_data["password"] = credentials["password"]
-
-        print(f"Submitting form...")
-
-        # Step 4: Submit the form
-        action = form.get("action", "/")
-        if action.startswith("/"):
-            # Relative URL - construct full URL
-            parsed_url = urlparse(redirect_url)
-            submit_url = f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
-        else:
-            submit_url = action
-
-        resp = safe_post(
-            submit_url,
-            session=session,
-            error_msg="Failed to submit form",
-            data=form_data,
-        )
-        if not resp:
-            return False
-
-        print("Form submitted, waiting to verify internet access...")
-        time.sleep(5)
-
-        # Step 5: Check if login succeeded
-        if check_internet():
-            print("Bodleian login succeeded and internet is reachable.")
-            return True
-        print("Form submitted but internet not reachable yet.")
-        return False
 
 
 class SkyAdminNetwork(WiFiNetwork):
@@ -710,6 +710,50 @@ def check_internet(timeout=3):
 
 def disable_ssl_warnings():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+def get_chrome_driver():
+    """Initialize the global Chrome driver once at startup"""
+    global _chrome_driver
+
+    if _chrome_driver is not None:
+        return _chrome_driver
+
+    # Set up Chrome options
+    options = webdriver.ChromeOptions()
+
+    # Try to find system Chrome binary
+    chrome_binary = None
+    possible_paths = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium",
+    ]
+
+    for path in possible_paths:
+        if os.path.exists(path):
+            chrome_binary = path
+            break
+
+    if not chrome_binary:
+        print("ERROR: Could not find Chrome binary")
+        return None
+
+    options.binary_location = chrome_binary
+
+    # Add flags for running without sandbox and other compatibility settings
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--headless")
+
+    try:
+        _chrome_driver = webdriver.Chrome(options=options)
+        return _chrome_driver
+    except Exception as e:
+        print(f"ERROR initializing ChromeDriver: {type(e).__name__}: {e}")
+        return None
 
 
 def main():
