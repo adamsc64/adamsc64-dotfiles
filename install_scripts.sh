@@ -5,7 +5,7 @@ set -Eeu -o pipefail
 # Python virtual environment
 PYTHON_ENV_BASE="$HOME/.venvs"
 PYTHON_ENV_PATH="$PYTHON_ENV_BASE/env3"
-PYTHON_PACKAGES="beautifulsoup4 ipdb requests urllib3 pygame yt-dlp"
+PYTHON_PACKAGES="beautifulsoup4 ipdb requests urllib3 pygame yt-dlp selenium webdriver_manager"
 
 # Get the directory where this script is located
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
