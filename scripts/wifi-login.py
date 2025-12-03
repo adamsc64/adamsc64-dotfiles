@@ -156,7 +156,7 @@ class Bodleian(WiFiNetwork):
         global _chrome_driver
 
         try:
-            driver = init_chrome_driver()
+            driver = get_chrome_driver()
             if not driver:
                 print("ERROR: Failed to initialize Chrome driver")
                 return False
