@@ -59,13 +59,20 @@ ensure_python_env() {
     echo "Ensuring Python environment at $PYTHON_ENV_PATH..."
     if [[ ! -d "$PYTHON_ENV_PATH" ]]; then
         echo "Creating Python virtual environment at $PYTHON_ENV_PATH..."
-        mkdir -p "$PYTHON_ENV_BASE"
-        python3 -m venv "$PYTHON_ENV_PATH"
-        source "$PYTHON_ENV_PATH/bin/activate"
-        pip install $PYTHON_PACKAGES
-        deactivate
         echo "Virtual environment created at $PYTHON_ENV_PATH"
     fi
+    echo "Installing required Python packages..."
+    mkdir -p "$PYTHON_ENV_BASE"
+    python3 -m venv "$PYTHON_ENV_PATH"
+    source "$PYTHON_ENV_PATH/bin/activate"
+    pip install $PYTHON_PACKAGES
+
+    # Pre-download chromedriver for wifi-login.py (needs to work offline)
+    echo "Pre-downloading chromedriver for offline use..."
+    python -c "from webdriver_manager.chrome import ChromeDriverManager; ChromeDriverManager().install()"
+
+    deactivate
+    echo "Python packages installed."
 }
 
 wrap_script() {
