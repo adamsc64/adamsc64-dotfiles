@@ -118,7 +118,7 @@ class Owl(WiFiNetwork):
             return True
         else:
             print("Login POST succeeded but internet not reachable.")
-            print(f"Is username {credentials['auth_user']} still right?")
+            fail(f"Is username {credentials['auth_user']} still right?")
         return False
 
 
