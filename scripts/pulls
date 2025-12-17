@@ -40,8 +40,25 @@ else
   org_query="org:github+"
 fi
 
-gh api "search/issues?q=is:pr+${state_query}${org_query}author:@me&sort=updated&order=desc" \
-  --jq '.items[] |
-    [(.title + " #" + (.number|tostring)), .html_url]
-    | @tsv' \
-  | column -t -s $'\t'
+result=$(gh api "search/issues?q=is:pr+${state_query}${org_query}author:@me&sort=updated&order=desc" 2>&1)
+exit_code=$?
+
+if [[ $exit_code -ne 0 ]]; then
+  if echo "$result" | grep -q "HTTP 422"; then
+    echo "Error: GitHub API validation failed (HTTP 422)"
+    echo ""
+    echo "This usually means your GitHub token needs SSO authorization."
+    echo "To fix this:"
+    echo "  1. Go to https://github.com/settings/tokens"
+    echo "  2. Find your token and click 'Configure SSO'"
+    echo "  3. Authorize it for the organization(s) you want to access"
+    exit 1
+  else
+    echo "$result"
+    exit $exit_code
+  fi
+fi
+
+echo "$result" | jq -r '.items[] |
+  [(.title + " #" + (.number|tostring)), .html_url]
+  | @tsv' | column -t -s $'\t'
