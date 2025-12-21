@@ -747,7 +747,12 @@ def _get_ssid_from_networksetup():
 
 
 def _get_ssid_from_ipconfig():
-    """Try to get SSID using ipconfig (requires sudo but reliable on modern macOS)."""
+    """Try to get SSID using ipconfig (requires sudo but reliable on modern macOS).
+
+    Optional: To avoid password prompts:
+        1. Run: sudo visudo -f /etc/sudoers.d/wifi-login
+        2. Add: YOUR_USERNAME ALL=(ALL) NOPASSWD: /usr/sbin/ipconfig
+    """
     try:
         # First enable verbose mode
         subprocess.run(
