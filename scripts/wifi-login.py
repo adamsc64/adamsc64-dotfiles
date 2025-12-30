@@ -462,9 +462,7 @@ class SkyAdminNetwork(WiFiNetwork):
             )
 
             # Check for invalid access code
-            invalid = "This access code is invalid at this time." in str(
-                response.content
-            )
+            invalid = ("invalid" in response.text.lower())
             if invalid:
                 access_code = credentials.get("access_code", "")
                 fail(f"Access code {access_code} needs to be rotated.")
