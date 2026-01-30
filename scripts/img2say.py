@@ -1,4 +1,4 @@
-#!/Users/chris/virtualenvs/env3/bin/python
+#!/usr/bin/env python3
 """
 Script to speak an image.
 

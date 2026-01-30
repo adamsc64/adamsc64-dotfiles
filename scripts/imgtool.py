@@ -1,4 +1,4 @@
-#!/Users/chris/virtualenvs/env38/bin/python
+#!/usr/bin/env python3
 '''
 A quick collection of tooling around image processing.
 
