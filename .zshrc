@@ -108,6 +108,11 @@ function set-git-helpers() {
     alias gpr='gh pr list -A $USERNAME --json url,title,number'
 }
 
+function set-utility-functions() {
+    # rm-blobs-md: remove base64 image data from markdown files
+    rm-blobs-md() { sed -i '' '/^\[image[0-9]*\]:.*data:/d' "$1"; }
+}
+
 # Special function in Zsh that runs before each prompt is displayed
 function precmd() {
     function set-title() {
@@ -127,6 +132,7 @@ set-prompt
 set-colors
 configure-terminal-history
 set-git-helpers
+set-utility-functions
 
 # Force the 'backspace' key to properly erase characters in the
 # terminal.
