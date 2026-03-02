@@ -14,6 +14,17 @@ import re
 import argparse
 
 
+def is_bold(text):
+    return text.startswith("**") and text.endswith("**")
+
+
+def is_heading(text):
+    match = re.match(r'^#+\s+(\d+)\\.', text)
+    if match:
+        return match.group(1)
+    return None
+
+
 def get_section(lines, section_number):
     section_start = -1
     section_end = -1
@@ -26,7 +37,8 @@ def get_section(lines, section_number):
         if stripped.startswith("[^1]:"):
             section_end = i
             break
-        if not(stripped.startswith("**") and stripped.endswith("**")):
+        candidate_section_number = is_heading(stripped)
+        if candidate_section_number is None:
             continue
         content = stripped[2:-2].strip()
         if not content:
@@ -34,7 +46,7 @@ def get_section(lines, section_number):
         dot_index = content.find("\\.")  # google docs escapes it this way
         if dot_index == -1:
             continue
-        candidate_section_number = content[0:dot_index]
+        # candidate_section_number = content[0:dot_index]
         if candidate_section_number != section_number:
             if section_start != -1:
                 section_end = i
