@@ -11,7 +11,7 @@ Fast file search using macOS Spotlight (mdfind).
 Searches for files containing the pattern anywhere in their filename.
 
 Arguments:
-  search pattern    Text to search for in filenames (case-sensitive)
+  search pattern    Text to search for in filenames (case-insensitive)
 
 Options:
   -h, --help       Show this help message
@@ -24,7 +24,7 @@ Examples:
 Note:
   - Uses Spotlight's index which is always up-to-date
   - Much faster than traditional 'find' commands
-  - Performs case-sensitive substring matching on filenames
+  - Performs case-insensitive substring matching on filenames
   - Searches only in current directory and subdirectories
 EOF
 }
@@ -45,4 +45,5 @@ fi
 # Use mdfind (Spotlight) - fast and always up-to-date
 # -onlyin restricts search to current directory and subdirectories
 # kMDItemFSName queries the filename metadata with wildcard pattern matching
-mdfind -onlyin . "kMDItemFSName == '*${search_pattern}*'" 2>/dev/null
+# 'c' modifier makes the comparison case-insensitive
+mdfind -onlyin . "kMDItemFSName == '*${search_pattern}*'c" 2>/dev/null
