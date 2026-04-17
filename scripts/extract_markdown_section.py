@@ -46,34 +46,37 @@ def is_thesis_statement(text):
 def get_section(lines, section_number):
     section_start = -1
     section_end = -1
-    for i, line in enumerate(lines):
-        if "<data:image" in line:
-            continue  # Never include lines with images
+    filtered_lines = [line for line in lines if "<data:image" not in line]
+
+    for i, line in enumerate(filtered_lines):
         stripped = line.strip()
         # Check for the start of the footnotes, indicating the main
         # text of the article has ended.
         if stripped.startswith("[^1]:"):
-            section_end = i
-            break
-        candidate_section_number = is_heading(stripped)
-        if candidate_section_number is None:
-            continue
-        content = stripped[2:-2].strip()
-        if not content:
-            continue
-        dot_index = content.find("\\.")  # google docs escapes it this way
-        if dot_index == -1:
-            continue
-        # candidate_section_number = content[0:dot_index]
-        if candidate_section_number != section_number:
             if section_start != -1:
                 section_end = i
                 break
+            else:
+                # Footnotes reached before target section found
+                return []
+        
+        candidate_section_number = is_heading(stripped)
+        if candidate_section_number is None:
             continue
-        section_start = i
+            
+        if candidate_section_number == section_number:
+            section_start = i
+        elif section_start != -1:
+            # We found a new heading after our target section started
+            section_end = i
+            break
+            
+    if section_start == -1:
+        return []
     if section_end == -1:
-        section_end = len(lines)
-    return lines[section_start:section_end] if section_start != -1 else []
+        section_end = len(filtered_lines)
+
+    return filtered_lines[section_start:section_end]
 
 
 def get_footnotes(section, lines):
@@ -92,7 +95,8 @@ def get_footnotes(section, lines):
             continue
         matches = re.findall(r"\[\^(\d+)\]", line)
         for match in matches:
-            to_return.append(footnotes[int(match)])
+            if int(match) in footnotes:
+                to_return.append(footnotes[int(match)])
     return to_return
 
 
@@ -113,10 +117,12 @@ def extract_outline(markdown_text):
     return "".join(outline_lines)
 
 
-def main(markdown_text, section_number):
+def extract_section(markdown_text, section_number):
     lines = markdown_text.splitlines(keepends=True)
     section = get_section(lines, section_number)
     footnotes = get_footnotes(section, lines)
+    if not section:
+        return ""
     return "".join(section) + "\n\n" + "\n\n".join(footnotes)
 
 
@@ -144,6 +150,6 @@ if __name__ == "__main__":
     if args.outline:
         result = extract_outline(input_markdown)
     else:
-        result = main(input_markdown, args.section)
+        result = extract_section(input_markdown, args.section)
 
     print(result)
