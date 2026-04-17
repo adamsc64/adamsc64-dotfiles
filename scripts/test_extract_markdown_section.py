@@ -52,6 +52,27 @@ SINGLE_SECTION_DOC = """\
 Only content here.
 """
 
+DOC_WITH_SUBSECTIONS = """\
+### 2\\. Animals {#2.-animals}
+
+Intro to animals.
+
+#### 2.1 Mammals {#2.1-mammals}
+
+Mammals are warm-blooded[^1].
+
+#### 2.2 Reptiles {#2.2-reptiles}
+
+Reptiles are cold-blooded[^2].
+
+### 3\\. Plants {#3.-plants}
+
+Plants use photosynthesis.
+
+[^1]: Warm-blooded footnote.
+[^2]: Cold-blooded footnote.
+"""
+
 
 class TestGetSection(unittest.TestCase):
     def _lines(self, text):
@@ -148,6 +169,30 @@ class TestExtractSection(unittest.TestCase):
         result = extract_section(SIMPLE_DOC, "99")
         # Empty section + blank footnotes section = just whitespace/newlines
         self.assertEqual(result.strip(), "")
+
+
+class TestExtractSubsection(unittest.TestCase):
+    def test_extract_subsection_includes_content(self):
+        result = extract_section(DOC_WITH_SUBSECTIONS, "2.1")
+        self.assertIn("Mammals", result)
+        self.assertIn("Mammals are warm-blooded", result)
+
+    def test_extract_subsection_excludes_other_subsections(self):
+        result = extract_section(DOC_WITH_SUBSECTIONS, "2.1")
+        self.assertIn("Mammals", result)
+        self.assertNotIn("Reptiles", result)
+        self.assertNotIn("Plants", result)
+
+    def test_extract_subsection_includes_correct_footnote(self):
+        result = extract_section(DOC_WITH_SUBSECTIONS, "2.1")
+        self.assertIn("Warm-blooded footnote.", result)
+        self.assertNotIn("Cold-blooded footnote.", result)
+
+    def test_extract_second_subsection(self):
+        result = extract_section(DOC_WITH_SUBSECTIONS, "2.2")
+        self.assertIn("Reptiles", result)
+        self.assertIn("Cold-blooded footnote.", result)
+        self.assertNotIn("Mammals", result)
 
 
 if __name__ == "__main__":

@@ -47,6 +47,7 @@ def get_section(lines, section_number):
     section_start = -1
     section_end = -1
     filtered_lines = [line for line in lines if "<data:image" not in line]
+    is_subsection = "." in section_number
 
     for i, line in enumerate(filtered_lines):
         stripped = line.strip()
@@ -59,18 +60,23 @@ def get_section(lines, section_number):
             else:
                 # Footnotes reached before target section found
                 return []
-        
-        candidate_section_number = is_heading(stripped)
-        if candidate_section_number is None:
+
+        candidate = is_subheading(stripped) if is_subsection else is_heading(stripped)
+
+        if candidate is None:
+            # A top-level heading always ends an in-progress subsection
+            if is_subsection and section_start != -1 and is_heading(stripped) is not None:
+                section_end = i
+                break
             continue
-            
-        if candidate_section_number == section_number:
+
+        if candidate == section_number:
             section_start = i
         elif section_start != -1:
             # We found a new heading after our target section started
             section_end = i
             break
-            
+
     if section_start == -1:
         return []
     if section_end == -1:
