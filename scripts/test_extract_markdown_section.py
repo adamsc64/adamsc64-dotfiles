@@ -1,6 +1,14 @@
 import unittest
 
-from extract_markdown_section import extract_section, get_footnotes, get_section
+from count_words import count_separators
+from extract_markdown_section import (
+    extract_section,
+    get_footnotes,
+    get_section,
+    word_count_from_chapter_one,
+)
+
+# Note: count_separators tests live in test_count_words.py
 
 SIMPLE_DOC = """\
 # 1\\. Introduction
@@ -193,6 +201,50 @@ class TestExtractSubsection(unittest.TestCase):
         self.assertIn("Reptiles", result)
         self.assertIn("Cold-blooded footnote.", result)
         self.assertNotIn("Mammals", result)
+
+
+
+DOC_WITH_PREAMBLE = """\
+**[1\\. Introduction	2](#1.-introduction)**
+
+**[2\\. Methods	5](#2.-methods)**
+
+# 1\\. Introduction
+
+First word second word third word.
+
+# 2\\. Methods
+
+Methods text.
+
+[^1]: A footnote.
+"""
+
+DOC_WITHOUT_CHAPTER_ONE = """\
+Some preamble text.
+
+More preamble.
+"""
+
+
+class TestWordCountFromChapterOne(unittest.TestCase):
+    def test_ignores_preamble_before_chapter_one(self):
+        count = word_count_from_chapter_one(DOC_WITH_PREAMBLE)
+        preamble_count = count_separators(
+            "**[1\\. Introduction	2](#1.-introduction)**\n\n"
+            "**[2\\. Methods	5](#2.-methods)**\n\n"
+        )
+        full_count = count_separators(DOC_WITH_PREAMBLE)
+        self.assertLess(count, full_count)
+        self.assertEqual(count, full_count - preamble_count)
+
+    def test_returns_zero_when_no_chapter_one(self):
+        self.assertEqual(word_count_from_chapter_one(DOC_WITHOUT_CHAPTER_ONE), 0)
+
+    def test_includes_chapter_one_heading_in_count(self):
+        # The count starts from (and includes) the chapter 1 heading line
+        result = word_count_from_chapter_one(DOC_WITH_PREAMBLE)
+        self.assertGreater(result, 0)
 
 
 if __name__ == "__main__":

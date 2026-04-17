@@ -17,6 +17,9 @@ $ python3 extract_markdown_section.py \
 
 import argparse
 import re
+import sys
+import os
+from count_words import count_separators
 
 
 def is_bold(text):
@@ -123,6 +126,15 @@ def extract_outline(markdown_text):
     return "".join(outline_lines)
 
 
+def word_count_from_chapter_one(markdown_text):
+    lines = markdown_text.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if is_heading(line.strip()) == "1":
+            body = "".join(lines[i:])
+            return count_separators(body)
+    return 0
+
+
 def extract_section(markdown_text, section_number):
     lines = markdown_text.splitlines(keepends=True)
     section = get_section(lines, section_number)
@@ -141,20 +153,27 @@ if __name__ == "__main__":
     parser.add_argument(
         "-o", "--outline", action="store_true", help="Print outline of all headings"
     )
+    parser.add_argument(
+        "-c", "--count", action="store_true",
+        help="Count words starting from chapter 1"
+    )
 
     args = parser.parse_args()
 
     # Validate that exactly one mode is selected
-    if args.outline and args.section:
-        parser.error("Cannot specify both --outline and --section")
-    if not args.outline and not args.section:
-        parser.error("Must specify either --outline or --section")
+    modes = [args.outline, bool(args.section), args.count]
+    if sum(modes) > 1:
+        parser.error("Cannot specify more than one of --outline, --section, --count")
+    if sum(modes) == 0:
+        parser.error("Must specify one of --outline, --section, or --count")
 
     with open(args.input, "r", encoding="utf-8") as f:
         input_markdown = f.read()
 
     if args.outline:
         result = extract_outline(input_markdown)
+    elif args.count:
+        result = str(word_count_from_chapter_one(input_markdown))
     else:
         result = extract_section(input_markdown, args.section)
 
