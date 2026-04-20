@@ -135,6 +135,49 @@ def word_count_from_chapter_one(markdown_text):
     return 0
 
 
+def _section_word_count(section_number, lines):
+    """Count words in a section (or subsection) including its footnotes."""
+    section = get_section(lines, section_number)
+    footnotes = get_footnotes(section, lines)
+    return count_separators("".join(section) + "\n".join(footnotes))
+
+
+def word_count_segmented(markdown_text):
+    lines = markdown_text.splitlines(keepends=True)
+
+    # Discover top-level sections and their subsections in document order
+    sections = []  # list of [section_number, [subsection_numbers]]
+    current_section = None
+    for line in lines:
+        stripped = line.strip()
+        h = is_heading(stripped)
+        if h is not None:
+            current_section = h
+            sections.append([h, []])
+            continue
+        s = is_subheading(stripped)
+        if s is not None and current_section is not None:
+            if s.startswith(current_section + "."):
+                sections[-1][1].append(s)
+
+    rows = []
+    total = 0
+    for section_num, subsections in sections:
+        if subsections:
+            sub_counts = {s: _section_word_count(s, lines) for s in subsections}
+            section_total = sum(sub_counts.values())
+            rows.append(f"{section_num}. {section_total}")
+            for sub, cnt in sub_counts.items():
+                rows.append(f"\t{sub} {cnt}")
+        else:
+            section_total = _section_word_count(section_num, lines)
+            rows.append(f"{section_num}. {section_total}")
+        total += section_total
+
+    rows.append(f"Total: {total}")
+    return "\n".join(rows)
+
+
 def extract_section(markdown_text, section_number):
     lines = markdown_text.splitlines(keepends=True)
     section = get_section(lines, section_number)
@@ -173,7 +216,7 @@ if __name__ == "__main__":
     if args.outline:
         result = extract_outline(input_markdown)
     elif args.count:
-        result = str(word_count_from_chapter_one(input_markdown))
+        result = word_count_segmented(input_markdown)
     else:
         result = extract_section(input_markdown, args.section)
 

@@ -6,6 +6,7 @@ from extract_markdown_section import (
     get_footnotes,
     get_section,
     word_count_from_chapter_one,
+    word_count_segmented,
 )
 
 # Note: count_separators tests live in test_count_words.py
@@ -245,6 +246,72 @@ class TestWordCountFromChapterOne(unittest.TestCase):
         # The count starts from (and includes) the chapter 1 heading line
         result = word_count_from_chapter_one(DOC_WITH_PREAMBLE)
         self.assertGreater(result, 0)
+
+
+DOC_WITH_NESTED_SUBSECTIONS = """\
+# 1\\. Planets
+
+Intro to planets.
+
+#### 1.1 Rocky Planets {#1.1-rocky-planets}
+
+Mercury Venus Earth Mars[^1].
+
+#### 1.2 Gas Giants {#1.2-gas-giants}
+
+Jupiter Saturn[^2].
+
+# 2\\. Stars
+
+Sun is a star.
+
+[^1]: Rocky planets footnote.
+[^2]: Gas giants footnote.
+"""
+
+
+class TestWordCountSegmented(unittest.TestCase):
+    def _parse_lines(self, output):
+        """Return a dict mapping label -> count from segmented output lines."""
+        result = {}
+        for line in output.strip().splitlines():
+            parts = line.strip().rsplit(" ", 1)
+            if len(parts) == 2:
+                result[parts[0].strip()] = int(parts[1].strip())
+        return result
+
+    def test_output_contains_expected_labels(self):
+        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        parsed = self._parse_lines(output)
+        self.assertIn("1.", parsed)
+        self.assertIn("1.1", parsed)
+        self.assertIn("1.2", parsed)
+        self.assertIn("2.", parsed)
+        self.assertIn("Total:", parsed)
+
+    def test_section_total_equals_sum_of_subsections(self):
+        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        parsed = self._parse_lines(output)
+        self.assertEqual(parsed["1."], parsed["1.1"] + parsed["1.2"])
+
+    def test_total_equals_sum_of_top_level_sections(self):
+        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        parsed = self._parse_lines(output)
+        self.assertEqual(parsed["Total:"], parsed["1."] + parsed["2."])
+
+    def test_subsection_count_includes_its_footnotes(self):
+        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        parsed = self._parse_lines(output)
+        # 1.1 references [^1]; its count should include the footnote text
+        count_without_footnote = count_separators("Mercury Venus Earth Mars.")
+        self.assertGreater(parsed["1.1"], count_without_footnote)
+
+    def test_section_without_subsections_includes_footnotes(self):
+        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        parsed = self._parse_lines(output)
+        # Section 2 has no subsections
+        count_without_footnote = count_separators("Sun is a star.")
+        self.assertGreater(parsed["2."], count_without_footnote)
 
 
 if __name__ == "__main__":
