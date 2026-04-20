@@ -5,7 +5,6 @@ set -Eeu -o pipefail
 # Python virtual environment
 PYTHON_ENV_BASE="$HOME/.venvs"
 PYTHON_ENV_PATH="$PYTHON_ENV_BASE/env3"
-PYTHON_PACKAGES="beautifulsoup4 ipdb requests urllib3 pygame yt-dlp selenium webdriver_manager pytesseract"
 
 # Get the directory where this script is located
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -55,26 +54,6 @@ link_script() {
     fi
 }
 
-ensure_python_env() {
-    echo "Ensuring Python environment at $PYTHON_ENV_PATH..."
-    if [[ ! -d "$PYTHON_ENV_PATH" ]]; then
-        echo "Creating Python virtual environment at $PYTHON_ENV_PATH..."
-        echo "Virtual environment created at $PYTHON_ENV_PATH"
-    fi
-    echo "Installing required Python packages..."
-    mkdir -p "$PYTHON_ENV_BASE"
-    python3 -m venv "$PYTHON_ENV_PATH"
-    source "$PYTHON_ENV_PATH/bin/activate"
-    pip install $PYTHON_PACKAGES
-
-    # Pre-download chromedriver for wifi-login.py (needs to work offline)
-    echo "Pre-downloading chromedriver for offline use..."
-    python -c "from webdriver_manager.chrome import ChromeDriverManager; ChromeDriverManager().install()"
-
-    deactivate
-    echo "Python packages installed."
-}
-
 wrap_script() {
     local script=$1
     local srcpath="${THIS_DIR}/scripts/${script}"
@@ -103,7 +82,6 @@ EOF
 }
 
 main() {
-    ensure_python_env
     add_executable_scripts py
     add_executable_scripts sh
     echo "Linking and wrapping scripts..."
