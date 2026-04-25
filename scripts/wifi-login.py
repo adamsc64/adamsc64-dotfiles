@@ -2,6 +2,7 @@
 import hashlib
 import os
 import re
+import socket
 import subprocess
 import sys
 import time
@@ -224,8 +225,6 @@ class Bodleian(WiFiNetwork):
             hostname = parsed_redirect.hostname
             print(f"\nChecking DNS resolution for: {hostname}")
             try:
-                import socket
-
                 ip_address = socket.gethostbyname(hostname)
                 print(f"  Resolved to IP: {ip_address}")
             except socket.gaierror as e:
@@ -832,14 +831,30 @@ def get_ip_address(interface="en0"):
 # Confirm that we have actual internet access
 def check_internet(timeout=3):
     JS_REDIRECT = 'window.location="https://bodreader.bodleian.ox.ac.uk'
+    # Quick TCP roundtrip first — catches slow-loris/hung connections before
+    # committing to a full HTTP read.
+    try:
+        with socket.create_connection(("www.gstatic.com", 80), timeout=timeout):
+            pass
+    except OSError as exc:
+        fail(
+            f"Basic connectivity problem — TCP check failed: {exc}\n"
+            "Check that your network interface has a valid IP and default route "
+            "(try: ifconfig en0 / netstat -rn)"
+        )
     try:
         resp = requests.get(GSTATIC_204, timeout=timeout, allow_redirects=False)
         # Bodleian is sneaky; they return HTTP 200 with a javascript redirect
         # So we check for actual content.
         if JS_REDIRECT in resp.text:
+            print("  HTTP check failed: captive portal JS redirect detected")
             return False
-        return resp.status_code == 204
-    except requests.RequestException:
+        if resp.status_code != 204:
+            print(f"  HTTP check failed: expected 204, got {resp.status_code}")
+            return False
+        return True
+    except requests.RequestException as exc:
+        print(f"  HTTP check failed: {exc}")
         return False
 
 
