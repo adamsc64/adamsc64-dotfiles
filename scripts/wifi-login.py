@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+"""
+Automatically log in to known captive-portal Wi-Fi networks on macOS.
+
+Prerequisites
+-------------
+macOS's captive-network-assistant intercepts portal redirects and opens its own
+pop-up window, which can interfere with this script. Disable it once with:
+
+    sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.captive.control Active -boolean false
+
+Getting the current SSID on modern macOS requires sudo for the ipconfig fallback.
+To avoid password prompts, add a sudoers entry:
+
+    sudo visudo -f /etc/sudoers.d/wifi-login
+    # Add: YOUR_USERNAME ALL=(ALL) NOPASSWD: /usr/sbin/ipconfig
+"""
 import hashlib
 import os
 import re
