@@ -19,7 +19,18 @@ import argparse
 import re
 import sys
 import os
+from typing import Dict, NamedTuple
 from count_words import count_separators
+
+
+class SectionCount(NamedTuple):
+    count: int
+    subsections: Dict[str, int]  # subsection number -> word count
+
+
+class WordCountResult(NamedTuple):
+    sections: Dict[str, SectionCount]  # section number -> SectionCount
+    total: int
 
 
 def is_bold(text):
@@ -47,6 +58,7 @@ def is_thesis_statement(text):
 
 
 def get_section(lines, section_number):
+
     section_start = -1
     section_end = -1
     filtered_lines = [line for line in lines if "<data:image" not in line]
@@ -142,39 +154,46 @@ def _section_word_count(section_number, lines):
     return count_separators("".join(section) + "\n".join(footnotes))
 
 
-def word_count_segmented(markdown_text):
+def word_count_segmented(markdown_text) -> WordCountResult:
     lines = markdown_text.splitlines(keepends=True)
 
     # Discover top-level sections and their subsections in document order
-    sections = []  # list of [section_number, [subsection_numbers]]
+    raw_sections = []  # list of [section_number, [subsection_numbers]]
     current_section = None
     for line in lines:
         stripped = line.strip()
         h = is_heading(stripped)
         if h is not None:
             current_section = h
-            sections.append([h, []])
+            raw_sections.append([h, []])
             continue
         s = is_subheading(stripped)
         if s is not None and current_section is not None:
             if s.startswith(current_section + "."):
-                sections[-1][1].append(s)
+                raw_sections[-1][1].append(s)
 
-    rows = []
+    sections = {}
     total = 0
-    for section_num, subsections in sections:
-        if subsections:
-            sub_counts = {s: _section_word_count(s, lines) for s in subsections}
-            section_total = sum(sub_counts.values())
-            rows.append(f"{section_num}. {section_total}")
-            for sub, cnt in sub_counts.items():
-                rows.append(f"\t{sub} {cnt}")
+    for section_num, subsection_nums in raw_sections:
+        if subsection_nums:
+            subsections = {s: _section_word_count(s, lines) for s in subsection_nums}
+            section_total = sum(subsections.values())
         else:
+            subsections = {}
             section_total = _section_word_count(section_num, lines)
-            rows.append(f"{section_num}. {section_total}")
+        sections[section_num] = SectionCount(count=section_total, subsections=subsections)
         total += section_total
 
-    rows.append(f"Total: {total}")
+    return WordCountResult(sections=sections, total=total)
+
+
+def format_word_count(result: WordCountResult) -> str:
+    rows = []
+    for num, section in result.sections.items():
+        rows.append(f"{num}. {section.count}")
+        for sub_num, sub_count in section.subsections.items():
+            rows.append(f"\t{sub_num} {sub_count}")
+    rows.append(f"Total: {result.total}")
     return "\n".join(rows)
 
 
@@ -215,9 +234,10 @@ if __name__ == "__main__":
 
     if args.outline:
         result = extract_outline(input_markdown)
+        print(result)
     elif args.count:
-        result = word_count_segmented(input_markdown)
+        result = format_word_count(word_count_segmented(input_markdown))
+        print(result)
     else:
         result = extract_section(input_markdown, args.section)
-
-    print(result)
+        print(result)

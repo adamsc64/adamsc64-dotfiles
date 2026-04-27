@@ -3,6 +3,7 @@ import unittest
 from count_words import count_separators
 from extract_markdown_section import (
     extract_section,
+    format_word_count,
     get_footnotes,
     get_section,
     word_count_from_chapter_one,
@@ -81,7 +82,6 @@ Plants use photosynthesis.
 [^1]: Warm-blooded footnote.
 [^2]: Cold-blooded footnote.
 """
-
 
 class TestGetSection(unittest.TestCase):
     def _lines(self, text):
@@ -271,47 +271,46 @@ Sun is a star.
 
 
 class TestWordCountSegmented(unittest.TestCase):
-    def _parse_lines(self, output):
-        """Return a dict mapping label -> count from segmented output lines."""
-        result = {}
-        for line in output.strip().splitlines():
-            parts = line.strip().rsplit(" ", 1)
-            if len(parts) == 2:
-                result[parts[0].strip()] = int(parts[1].strip())
-        return result
+    def _sections_by_number(self, result):
+        """Return a flat dict mapping section/subsection number -> count."""
+        d = {}
+        for num, section in result.sections.items():
+            d[num] = section.count
+            d.update(section.subsections)
+        return d
 
     def test_output_contains_expected_labels(self):
-        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
-        parsed = self._parse_lines(output)
-        self.assertIn("1.", parsed)
-        self.assertIn("1.1", parsed)
-        self.assertIn("1.2", parsed)
-        self.assertIn("2.", parsed)
-        self.assertIn("Total:", parsed)
+        result = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        by_number = self._sections_by_number(result)
+        self.assertIn("1", by_number)
+        self.assertIn("1.1", by_number)
+        self.assertIn("1.2", by_number)
+        self.assertIn("2", by_number)
+        self.assertIsNotNone(result.total)
 
     def test_section_total_equals_sum_of_subsections(self):
-        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
-        parsed = self._parse_lines(output)
-        self.assertEqual(parsed["1."], parsed["1.1"] + parsed["1.2"])
+        result = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        by_number = self._sections_by_number(result)
+        self.assertEqual(by_number["1"], by_number["1.1"] + by_number["1.2"])
 
     def test_total_equals_sum_of_top_level_sections(self):
-        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
-        parsed = self._parse_lines(output)
-        self.assertEqual(parsed["Total:"], parsed["1."] + parsed["2."])
+        result = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        by_number = self._sections_by_number(result)
+        self.assertEqual(result.total, by_number["1"] + by_number["2"])
 
     def test_subsection_count_includes_its_footnotes(self):
-        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
-        parsed = self._parse_lines(output)
+        result = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        by_number = self._sections_by_number(result)
         # 1.1 references [^1]; its count should include the footnote text
         count_without_footnote = count_separators("Mercury Venus Earth Mars.")
-        self.assertGreater(parsed["1.1"], count_without_footnote)
+        self.assertGreater(by_number["1.1"], count_without_footnote)
 
     def test_section_without_subsections_includes_footnotes(self):
-        output = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
-        parsed = self._parse_lines(output)
+        result = word_count_segmented(DOC_WITH_NESTED_SUBSECTIONS)
+        by_number = self._sections_by_number(result)
         # Section 2 has no subsections
         count_without_footnote = count_separators("Sun is a star.")
-        self.assertGreater(parsed["2."], count_without_footnote)
+        self.assertGreater(by_number["2"], count_without_footnote)
 
 
 if __name__ == "__main__":
