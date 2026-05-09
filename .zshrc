@@ -125,7 +125,7 @@ function set-utility-functions() {
         local txt_out="${base}.ocr-robust.txt"
 
         ocrmypdf \
-            --redo-ocr \
+            --force-ocr \
             --rotate-pages \
             --deskew \
             --optimize 1 \
