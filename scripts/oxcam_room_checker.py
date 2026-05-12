@@ -111,18 +111,22 @@ def main():
     if not (OXCAM_CLUB_USER and OXCAM_CLUB_PASSWORD):
         fail("Set OXCAM_CLUB_USER and OXCAM_CLUB_PASSWORD in your environment.")
 
-    with requests.Session() as session:
-        login_club(session)
-        booking_form, booking_url = handoff_to_booking(session)
-        day = datetime.date.today()
-        while True:
-            rooms = select_date_and_query(session, booking_url, booking_form, day)
-            if not rooms:
-                print("    (No rooms found.)")
-            else:
-                for room_name, price in rooms:
-                    print(f"    {room_name:<50} {price}")
-            day += datetime.timedelta(days=1)
+    try:
+        with requests.Session() as session:
+            login_club(session)
+            booking_form, booking_url = handoff_to_booking(session)
+            day = datetime.date.today()
+            while True:
+                rooms = select_date_and_query(session, booking_url, booking_form, day)
+                if not rooms:
+                    print("    (No rooms found.)")
+                else:
+                    for room_name, price in rooms:
+                        print(f"    {room_name:<50} {price}")
+                day += datetime.timedelta(days=1)
+    except KeyboardInterrupt:
+        print()  # newline after ^C
+        sys.exit(0)
 
 
 if __name__ == "__main__":
