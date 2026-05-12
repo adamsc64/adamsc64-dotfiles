@@ -75,7 +75,7 @@ def select_date_and_query(session, booking_url, booking_form, day):
 
     # Submit the form
     resp = session.post(action, data=form_fields, verify=False)
-    print(f"[+] Queried booking system for {day}")
+    print(f"[+] Queried booking system for {day:%Y-%m-%d (%A)}")
 
     # Parse results page
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -97,7 +97,8 @@ def select_date_and_query(session, booking_url, booking_form, day):
         price = Decimal(price)
         if price >= Decimal("200.00"):
             continue
-        available_rooms.append((room_name, price))
+        price_str = f"£{int(price)}"
+        available_rooms.append((room_name, price_str))
     return available_rooms
 
 
@@ -115,14 +116,12 @@ def main():
         booking_form, booking_url = handoff_to_booking(session)
         day = datetime.date.today()
         while True:
-            rooms = select_date_and_query(
-                session, booking_url, booking_form, day
-            )
+            rooms = select_date_and_query(session, booking_url, booking_form, day)
             if not rooms:
-                print("No rooms found.")
+                print("    (No rooms found.)")
             else:
-                for room in rooms:
-                    print("-", room)
+                for room_name, price in rooms:
+                    print(f"    {room_name:<50} {price}")
             day += datetime.timedelta(days=1)
 
 
