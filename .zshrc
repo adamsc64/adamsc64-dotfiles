@@ -124,6 +124,16 @@ function set-utility-functions() {
         local pdf_out="${base}.ocr-robust.pdf"
         local txt_out="${base}.ocr-robust.txt"
 
+        # If output already exists, exit code 2
+        if [ -f "$pdf_out" ]; then
+            echo "Output already exists: $pdf_out"
+            return 2
+        fi
+        if [ -f "$txt_out" ]; then
+            echo "Output already exists: $txt_out"
+            return 2
+        fi
+
         ocrmypdf \
             --force-ocr \
             --rotate-pages \
