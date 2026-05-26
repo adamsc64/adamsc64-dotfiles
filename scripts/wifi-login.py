@@ -868,10 +868,6 @@ def check_internet(timeout=3):
         if resp.status_code != 204:
             print(f"  HTTP check failed: expected 204, got {resp.status_code}")
             return False
-        # Do a final check to catch an edge case
-        live_site_resp = requests.get("http://www.cnn.com", timeout=timeout, allow_redirects=False)
-        if live_site_resp.status_code == 302:
-            return False
         return True
     except requests.RequestException as exc:
         print(f"  HTTP check failed: {exc}")
