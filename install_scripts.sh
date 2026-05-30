@@ -48,7 +48,7 @@ link_script() {
         echo "Warning: Source file ${srcpath} does not exist, skipping"
         return
     fi
-    if [[ ! -L "$destpath" ]]; then
+    if [[ ! -e "$destpath" && ! -L "$destpath" ]]; then
         echo "Creating symlink from ${srcpath} to ${destpath}..."
         ln -s "$srcpath" "$destpath"
     fi
