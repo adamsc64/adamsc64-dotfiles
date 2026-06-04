@@ -123,6 +123,7 @@ function set-utility-functions() {
         local base="${input%.pdf}"
         local pdf_out="${base}.ocr-robust.pdf"
         local txt_out="${base}.ocr-robust.txt"
+        local md_out="$(dirname "$pdf_out")/$(basename "$pdf_out" .pdf)/$(basename "$pdf_out" .pdf).md"
 
         # If output already exists, exit code 2
         if [ -f "$pdf_out" ]; then
@@ -131,6 +132,10 @@ function set-utility-functions() {
         fi
         if [ -f "$txt_out" ]; then
             echo "Output already exists: $txt_out"
+            return 2
+        fi
+        if [ -f "$md_out" ]; then
+            echo "Output already exists: $md_out"
             return 2
         fi
 
@@ -143,11 +148,14 @@ function set-utility-functions() {
             "$input" \
             "$pdf_out" || return 1
 
-        pdftotext "$pdf_out" "$txt_out"
+        pdftotext "$pdf_out" "$txt_out" || return 1
+
+        "$HOME/.venvs/env3/bin/marker_single" "$pdf_out" "$(dirname "$pdf_out")" || return 1
 
         echo "Created:"
         echo "  $pdf_out"
         echo "  $txt_out"
+        echo "  $md_out"
     }
 }
 
@@ -224,3 +232,16 @@ fi
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
+
+# Activation shortcut for Python virtual environments
+venv() {
+  if [ -f ".venv/bin/activate" ]; then
+    source .venv/bin/activate
+    echo "Activated virtual environment in .venv"
+  elif [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+    echo "Activated virtual environment in venv"
+  else
+    echo "Error: No virtual environment found in .venv/ or venv/"
+  fi
+}

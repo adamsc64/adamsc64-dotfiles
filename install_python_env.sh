@@ -4,7 +4,7 @@ set -Eeu -o pipefail
 
 PYTHON_ENV_BASE="$HOME/.venvs"
 PYTHON_ENV_PATH="$PYTHON_ENV_BASE/env3"
-PYTHON_PACKAGES="beautifulsoup4 ipdb requests urllib3 pygame yt-dlp selenium webdriver_manager pytesseract"
+PYTHON_PACKAGES="beautifulsoup4 ipdb requests urllib3 pygame yt-dlp selenium webdriver_manager pytesseract marker-pdf"
 
 echo "Ensuring Python environment at $PYTHON_ENV_PATH..."
 if [[ ! -d "$PYTHON_ENV_PATH" ]]; then
