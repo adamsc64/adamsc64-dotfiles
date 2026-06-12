@@ -1,7 +1,7 @@
 import unittest
 
 from count_words import count_separators
-from extract_markdown_section import (
+from docstract import (
     extract_section,
     format_word_count,
     get_footnotes,

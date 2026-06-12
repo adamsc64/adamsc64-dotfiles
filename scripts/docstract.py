@@ -6,13 +6,10 @@ where sections are marked with bold headers like "**1. Introduction**".
 
 Example usage:
 # Extract a specific section:
-$ python3 extract_markdown_section.py \
-    -i "$(last-download.sh)" -s6 \
-    | pbcopy
+$ docstract -i "$(last-download.sh)" -s6 | pbcopy
 
 # Print outline of all headings:
-$ python3 extract_markdown_section.py \
-    -i "$(last-download.sh)" -o
+$ docstract -i "$(last-download.sh)" -o
 """
 
 import argparse
