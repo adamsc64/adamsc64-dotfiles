@@ -16,10 +16,11 @@ $ python3 extract_markdown_section.py \
 """
 
 import argparse
+import os
 import re
 import sys
-import os
 from typing import Dict, NamedTuple
+
 from count_words import count_separators
 
 
@@ -80,7 +81,11 @@ def get_section(lines, section_number):
 
         if candidate is None:
             # A top-level heading always ends an in-progress subsection
-            if is_subsection and section_start != -1 and is_heading(stripped) is not None:
+            if (
+                is_subsection
+                and section_start != -1
+                and is_heading(stripped) is not None
+            ):
                 section_end = i
                 break
             continue
@@ -181,7 +186,9 @@ def word_count_segmented(markdown_text) -> WordCountResult:
         else:
             subsections = {}
             section_total = _section_word_count(section_num, lines)
-        sections[section_num] = SectionCount(count=section_total, subsections=subsections)
+        sections[section_num] = SectionCount(
+            count=section_total, subsections=subsections
+        )
         total += section_total
 
     return WordCountResult(sections=sections, total=total)
@@ -195,6 +202,24 @@ def format_word_count(result: WordCountResult) -> str:
             rows.append(f"\t{sub_num} {sub_count}")
     rows.append(f"Total: {result.total}")
     return "\n".join(rows)
+
+
+def extract_abstract(markdown_text):
+    """Extract the ABSTRACT section, ending with the 'Words: NNN' line."""
+    lines = markdown_text.splitlines(keepends=True)
+    abstract_start = -1
+    for i, line in enumerate(lines):
+        if line.strip() == "**ABSTRACT**":
+            abstract_start = i
+            break
+    if abstract_start == -1:
+        return ""
+    result = []
+    for line in lines[abstract_start:]:
+        result.append(line)
+        if re.match(r"^Words:\s*\d+", line.strip()):
+            break
+    return "".join(result)
 
 
 def extract_section(markdown_text, section_number):
@@ -216,14 +241,16 @@ if __name__ == "__main__":
         "-o", "--outline", action="store_true", help="Print outline of all headings"
     )
     parser.add_argument(
-        "-c", "--count", action="store_true",
-        help="Count words starting from chapter 1"
+        "-c", "--count", action="store_true", help="Count words starting from chapter 1"
+    )
+    parser.add_argument(
+        "-a", "--abstract", action="store_true", help="Extract the ABSTRACT section"
     )
 
     args = parser.parse_args()
 
     # Validate that exactly one mode is selected
-    modes = [args.outline, bool(args.section), args.count]
+    modes = [args.outline, bool(args.section), args.count, args.abstract]
     if sum(modes) > 1:
         parser.error("Cannot specify more than one of --outline, --section, --count")
     if sum(modes) == 0:
@@ -237,6 +264,9 @@ if __name__ == "__main__":
         print(result)
     elif args.count:
         result = format_word_count(word_count_segmented(input_markdown))
+        print(result)
+    elif args.abstract:
+        result = extract_abstract(input_markdown)
         print(result)
     else:
         result = extract_section(input_markdown, args.section)
