@@ -150,7 +150,7 @@ function set-utility-functions() {
 
         pdftotext "$pdf_out" "$txt_out" || return 1
 
-        "$HOME/.venvs/env3/bin/marker_single" "$pdf_out" "$(dirname "$pdf_out")" || return 1
+        "$HOME/.venvs/env3/bin/marker_single" --output_dir "$(dirname "$pdf_out")" "$pdf_out" || return 1
 
         echo "Created:"
         echo "  $pdf_out"
