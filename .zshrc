@@ -164,6 +164,37 @@ function set-utility-functions() {
         echo "  $txt_out"
         echo "  $md_out"
     }
+
+    # codeon: cd into a project under ~/coding and activate its virtualenv
+    codeon() {
+        local query="$1"
+        if [ -z "$query" ]; then
+            echo "Usage: code-on <project-name-fragment>"
+            return 1
+        fi
+
+        # Find all .venv dirs, sort by depth (BFS), match query against path
+        local venv_match
+        venv_match=$(find ~/coding -type d -name .venv \
+            | awk '{n=gsub("/","/",$0); print n, $0}' \
+            | sort -n \
+            | awk '{print $2}' \
+            | grep -i "$query" \
+            | head -1)
+
+        if [ -n "$venv_match" ]; then
+            local project_dir
+            project_dir="$(dirname "$venv_match")"
+            echo "Found: $project_dir"
+            cd "$project_dir" || return 1
+            deactivate
+            venv
+            return 0
+        fi
+
+        echo "No project with a .venv matching '$query' found in ~/coding"
+        return 1
+    }
 }
 
 # Special function in Zsh that runs before each prompt is displayed
