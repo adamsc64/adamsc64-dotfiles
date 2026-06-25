@@ -123,7 +123,6 @@ function set-utility-functions() {
         local base="${input%.pdf}"
         local pdf_out="${base}.ocr-robust.pdf"
         local txt_out="${base}.ocr-robust.txt"
-        local md_out="${base}.ocr-robust.md"
 
         # If output already exists, exit code 2
         if [ -f "$pdf_out" ]; then
@@ -132,10 +131,6 @@ function set-utility-functions() {
         fi
         if [ -f "$txt_out" ]; then
             echo "Output already exists: $txt_out"
-            return 2
-        fi
-        if [ -f "$md_out" ]; then
-            echo "Output already exists: $md_out"
             return 2
         fi
 
@@ -150,19 +145,9 @@ function set-utility-functions() {
 
         pdftotext "$pdf_out" "$txt_out" || return 1
 
-        local tmpdir marker_name
-        tmpdir="$(mktemp -d)" || return 1
-        marker_name="$(basename "$pdf_out" .pdf)"
-        "$HOME/.venvs/env3/bin/marker_single" --output_dir "$tmpdir" "$pdf_out" \
-            || { rm -rf "$tmpdir"; return 1; }
-        mv "$tmpdir/$marker_name/$marker_name.md" "$md_out" \
-            || { rm -rf "$tmpdir"; return 1; }
-        rm -rf "$tmpdir"
-
         echo "Created:"
         echo "  $pdf_out"
         echo "  $txt_out"
-        echo "  $md_out"
     }
 
     # codeon: cd into a project under ~/coding and activate its virtualenv
