@@ -21,6 +21,7 @@ scripts=(
     get-transcript
     gm
     img2say
+    ocr-robust
     pulls
     random
     tail-vscode-logs

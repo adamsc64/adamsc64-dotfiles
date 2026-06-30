@@ -1,0 +1,36 @@
+#!/usr/bin/env zsh
+
+input="$1"
+if [ -z "$input" ]; then
+    echo "Usage: ocr-robust input.pdf"
+    exit 1
+fi
+
+base="${input%.pdf}"
+pdf_out="${base}.ocr-robust.pdf"
+txt_out="${base}.ocr-robust.txt"
+
+# If output already exists, exit code 2
+if [ -f "$pdf_out" ]; then
+    echo "Output already exists: $pdf_out"
+    exit 2
+fi
+if [ -f "$txt_out" ]; then
+    echo "Output already exists: $txt_out"
+    exit 2
+fi
+
+ocrmypdf \
+    --force-ocr \
+    --rotate-pages \
+    --deskew \
+    --optimize 1 \
+    --language eng \
+    "$input" \
+    "$pdf_out" || exit 1
+
+pdftotext "$pdf_out" "$txt_out" || exit 1
+
+echo "Created:"
+echo "  $pdf_out"
+echo "  $txt_out"

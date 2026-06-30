@@ -112,44 +112,6 @@ function set-utility-functions() {
     # rm-blobs-md: remove base64 image data from markdown files
     rm-blobs-md() { sed -i '' '/^\[image[0-9]*\]:.*data:/d' "$1"; }
 
-    # ocr-robust: create a searchable PDF plus extracted text
-    ocr-robust() {
-        local input="$1"
-        if [ -z "$input" ]; then
-            echo "Usage: ocr-robust input.pdf"
-            return 1
-        fi
-
-        local base="${input%.pdf}"
-        local pdf_out="${base}.ocr-robust.pdf"
-        local txt_out="${base}.ocr-robust.txt"
-
-        # If output already exists, exit code 2
-        if [ -f "$pdf_out" ]; then
-            echo "Output already exists: $pdf_out"
-            return 2
-        fi
-        if [ -f "$txt_out" ]; then
-            echo "Output already exists: $txt_out"
-            return 2
-        fi
-
-        ocrmypdf \
-            --force-ocr \
-            --rotate-pages \
-            --deskew \
-            --optimize 1 \
-            --language eng \
-            "$input" \
-            "$pdf_out" || return 1
-
-        pdftotext "$pdf_out" "$txt_out" || return 1
-
-        echo "Created:"
-        echo "  $pdf_out"
-        echo "  $txt_out"
-    }
-
     # codeon: cd into a project under ~/coding and activate its virtualenv
     codeon() {
         local query="$1"
