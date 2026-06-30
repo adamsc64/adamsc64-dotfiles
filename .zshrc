@@ -121,7 +121,7 @@ function set-utility-functions() {
         fi
 
         local venv_match
-        venv_match="$(venv-match "$query")"
+        venv_match="$(venv-match -1 "$query")"
 
         if [ -n "$venv_match" ]; then
             local project_dir
