@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+query=${1:-}
+if [[ -z "$query" ]]; then
+    echo "Usage: venv-match <project-name-fragment>" >&2
+    exit 1
+fi
+
+find ~/coding -type d -name .venv \
+    | awk '{n=gsub("/","/",$0); print n, $0}' \
+    | sort -n \
+    | awk '{print $2}' \
+    | grep -i -- "$query" \
+    | head -1

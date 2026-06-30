@@ -120,14 +120,8 @@ function set-utility-functions() {
             return 1
         fi
 
-        # Find all .venv dirs, sort by depth (BFS), match query against path
         local venv_match
-        venv_match=$(find ~/coding -type d -name .venv \
-            | awk '{n=gsub("/","/",$0); print n, $0}' \
-            | sort -n \
-            | awk '{print $2}' \
-            | grep -i "$query" \
-            | head -1)
+        venv_match="$(venv-match "$query")"
 
         if [ -n "$venv_match" ]; then
             local project_dir

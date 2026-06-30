@@ -26,6 +26,7 @@ scripts=(
     random
     tail-vscode-logs
     trim
+    venv-match
     # executable .py and .sh scripts will be added dynamically
 )
 
