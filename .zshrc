@@ -124,16 +124,17 @@ function set-utility-functions() {
         project_match="$(venv-match -1 "$query")"
 
         if [ -n "$project_match" ]; then
-            echo "Found: $project_match"
             cd "$project_match" || return 1
 
             if [ -f ".venv/bin/activate" ] || [ -f "venv/bin/activate" ]; then
                 if command -v deactivate >/dev/null 2>&1; then
                     deactivate
                 fi
-                venv
-            else
-                echo "No virtual environment found in this project; skipped activation"
+                if [ -f ".venv/bin/activate" ]; then
+                    source .venv/bin/activate
+                elif [ -f "venv/bin/activate" ]; then
+                    source venv/bin/activate
+                fi
             fi
             return 0
         fi
