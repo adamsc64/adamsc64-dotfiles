@@ -120,20 +120,25 @@ function set-utility-functions() {
             return 1
         fi
 
-        local venv_match
-        venv_match="$(venv-match -1 "$query")"
+        local project_match
+        project_match="$(venv-match -1 "$query")"
 
-        if [ -n "$venv_match" ]; then
-            local project_dir
-            project_dir="$(dirname "$venv_match")"
-            echo "Found: $project_dir"
-            cd "$project_dir" || return 1
-            deactivate
-            venv
+        if [ -n "$project_match" ]; then
+            echo "Found: $project_match"
+            cd "$project_match" || return 1
+
+            if [ -f ".venv/bin/activate" ] || [ -f "venv/bin/activate" ]; then
+                if command -v deactivate >/dev/null 2>&1; then
+                    deactivate
+                fi
+                venv
+            else
+                echo "No virtual environment found in this project; skipped activation"
+            fi
             return 0
         fi
 
-        echo "No project with a .venv matching '$query' found in ~/coding"
+        echo "No git project matching '$query' found in ~/coding"
         return 1
     }
 }

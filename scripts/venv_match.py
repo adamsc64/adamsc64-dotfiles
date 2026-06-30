@@ -6,10 +6,11 @@ import sys
 
 def find_matches(coding_dir: Path, query: str) -> list[str]:
     matches: list[tuple[int, str]] = []
-    for path in coding_dir.rglob(".venv"):
-        if not path.is_dir():
+    for path in coding_dir.rglob(".git"):
+        if not (path.is_dir() or path.is_file()):
             continue
-        path_str = str(path)
+        project_root = str(path.parent)
+        path_str = project_root
         if query in path_str.lower():
             depth = path_str.count("/")
             matches.append((depth, path_str))
