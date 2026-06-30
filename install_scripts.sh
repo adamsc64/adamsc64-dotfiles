@@ -18,6 +18,7 @@ scripts=(
     cdd
     chrome-killall
     f
+    get-transcript
     gm
     img2say
     pulls
