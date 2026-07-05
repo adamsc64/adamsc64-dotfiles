@@ -4,7 +4,21 @@ set -Eeu -o pipefail
 
 PYTHON_ENV_BASE="$HOME/.venvs"
 PYTHON_ENV_PATH="$PYTHON_ENV_BASE/env3"
-PYTHON_PACKAGES="beautifulsoup4 ipdb requests urllib3 pygame yt-dlp selenium webdriver_manager pytesseract marker-pdf"
+PYTHON_PACKAGES=(
+    beautifulsoup4
+    bs4
+    html2text
+    ipdb
+    lxml
+    marker-pdf
+    pygame
+    pytesseract
+    requests
+    selenium
+    urllib3
+    webdriver_manager
+    yt-dlp
+)
 
 echo "Ensuring Python environment at $PYTHON_ENV_PATH..."
 if [[ ! -d "$PYTHON_ENV_PATH" ]]; then
@@ -13,7 +27,7 @@ fi
 mkdir -p "$PYTHON_ENV_BASE"
 python3 -m venv "$PYTHON_ENV_PATH"
 source "$PYTHON_ENV_PATH/bin/activate"
-pip install $PYTHON_PACKAGES
+pip install "${PYTHON_PACKAGES[@]}"
 
 # Pre-download chromedriver for wifi-login.py (needs to work offline)
 echo "Pre-downloading chromedriver for offline use..."
