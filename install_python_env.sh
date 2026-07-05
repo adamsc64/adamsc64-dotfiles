@@ -11,7 +11,7 @@ PYTHON_PACKAGES=(
     ipdb
     lxml
     marker-pdf
-    pygame
+    pygame-ce
     pytesseract
     requests
     selenium
