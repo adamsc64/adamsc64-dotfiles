@@ -142,6 +142,7 @@ function set-utility-functions() {
         echo "No git project matching '$query' found in ~/coding"
         return 1
     }
+    alias workon='codeon'
 }
 
 # Special function in Zsh that runs before each prompt is displayed
