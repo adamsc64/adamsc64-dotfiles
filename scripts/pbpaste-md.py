@@ -69,6 +69,7 @@ def clean_html(html: str) -> str:
 def html_to_markdown(html: str) -> str:
     converter = html2text.HTML2Text()
     converter.body_width = 0
+    converter.single_line_break = True
     return converter.handle(html)
 
 
